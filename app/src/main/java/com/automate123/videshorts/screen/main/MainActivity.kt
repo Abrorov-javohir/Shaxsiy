@@ -3,7 +3,7 @@ package com.automate123.videshorts.screen.main
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.automate123.videshorts.databinding.ActivityMainBinding
-import com.automate123.videshorts.service.PermissionProvider
+import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -11,7 +11,7 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
 
     @Inject
-    lateinit var permProvider: PermissionProvider
+    lateinit var permProvider: PermProvider
 
     private lateinit var binding: ActivityMainBinding
 

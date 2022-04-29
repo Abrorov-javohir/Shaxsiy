@@ -20,6 +20,8 @@ class PermProvider @Inject constructor(
     @ActivityContext private val context: Context
 ) : DefaultLifecycleObserver {
 
+    val allGranted = MutableSharedFlow<Boolean>(1)
+
     private lateinit var launcher: ActivityResultLauncher<Array<String>>
 
     init {
@@ -52,8 +54,6 @@ class PermProvider @Inject constructor(
     }
 
     companion object {
-
-        val allGranted = MutableSharedFlow<Boolean>(1)
 
         private val permissions = arrayOf(
             Manifest.permission.CAMERA,

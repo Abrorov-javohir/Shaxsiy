@@ -5,43 +5,38 @@ import android.content.Context
 import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.CameraXConfig
 import androidx.camera.lifecycle.ProcessCameraProvider
-import com.google.common.util.concurrent.ListenableFuture
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.concurrent.Executor
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
 
 @Singleton
 @SuppressLint("UnsafeOptInUsageError")
 class CameraProvider @Inject constructor(
-    @ApplicationContext context: Context,
-    mainExecutor: Executor
+    private val mainExecutor: Executor
 ) {
-
-    val instance = MutableStateFlow<ProcessCameraProvider?>(null)
-
-    private var future: ListenableFuture<ProcessCameraProvider>? = null
 
     init {
         ProcessCameraProvider.configureInstance(
-            CameraXConfig.Builder.fromConfig(Camera2Config.defaultConfig())
+            CameraXConfig.Builder
+                .fromConfig(Camera2Config.defaultConfig())
                 .build()
         )
-        GlobalScope.launch {
-            PermProvider.allGranted.collect {
-                if (it) {
-                    future = ProcessCameraProvider.getInstance(context)
-                    future?.addListener({
-                        val cameraProvider = future?.get()
-                        instance.tryEmit(cameraProvider)
-                    }, mainExecutor)
+    }
+
+    suspend fun getInstance(context: Context): ProcessCameraProvider {
+        val future = ProcessCameraProvider.getInstance(context)
+        return suspendCancellableCoroutine { continuation ->
+            future.addListener({
+                if (!future.isCancelled) {
+                    continuation.resume(future.get())
                 } else {
-                    future?.cancel(true)
-                    instance.emit(null)
+                    continuation.cancel()
                 }
+            }, mainExecutor)
+            continuation.invokeOnCancellation {
+                future.cancel(false)
             }
         }
     }
