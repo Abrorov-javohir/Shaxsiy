@@ -13,7 +13,6 @@ import com.automate123.videshorts.databinding.FragmentVideoBinding
 import com.automate123.videshorts.service.CameraProvider
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -30,7 +29,7 @@ class VideoFragment : Fragment() {
 
     private lateinit var binding: FragmentVideoBinding
 
-    private lateinit var provider: ProcessCameraProvider
+    private lateinit var pCameraProvider: ProcessCameraProvider
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, state: Bundle?): View {
         binding = FragmentVideoBinding.inflate(inflater, container, false)
@@ -42,19 +41,19 @@ class VideoFragment : Fragment() {
             permProvider.allGranted
                 .filter { it }
                 .collect {
-                    provider = cameraProvider.getInstance(requireContext())
+                    pCameraProvider = cameraProvider.getInstance(requireContext())
                     startCamera()
                 }
         }
     }
 
     private fun startCamera() {
-        provider.unbindAll()
+        pCameraProvider.unbindAll()
         val preview = Preview.Builder()
             .build()
         preview.setSurfaceProvider(binding.preview.surfaceProvider)
         try {
-            provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview)
+            pCameraProvider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, preview)
         } catch (e: Throwable) {
             Timber.e(e)
         }

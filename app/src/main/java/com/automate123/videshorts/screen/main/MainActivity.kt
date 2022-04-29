@@ -1,7 +1,7 @@
 package com.automate123.videshorts.screen.main
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.automate123.videshorts.databinding.ActivityMainBinding
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
