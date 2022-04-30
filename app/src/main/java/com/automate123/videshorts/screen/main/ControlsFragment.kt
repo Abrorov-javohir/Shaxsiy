@@ -32,18 +32,30 @@ class ControlsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.record.collect {
                 when (it.state) {
-                    Record.State.STARTING, Record.State.ENDING -> {
+                    Record.State.NONE -> {
+                        binding.fabForward.isEnabled = true
+                        binding.ivRetry.isEnabled = false
+                    }
+                    Record.State.START -> {
+                        binding.fabForward.isEnabled = false
+                        binding.ivRetry.isEnabled = it.isFinalState
+                    }
+                    Record.State.PAUSE -> {
                         binding.fabForward.isEnabled = false
                         binding.ivRetry.isEnabled = false
                     }
-                    Record.State.STARTED -> {
+                    Record.State.RESUME -> {
                         binding.fabForward.isEnabled = false
                         binding.ivRetry.isEnabled = true
                     }
-                    Record.State.ENDED -> {
-                        binding.fabForward.isEnabled = true
-                        binding.ivRetry.isEnabled = it.position > 0
+                    Record.State.END -> {
+                        binding.fabForward.isEnabled = it.isFinalState
+                        binding.ivRetry.isEnabled = it.isFinalState
                         // todo loading thumb
+                    }
+                    Record.State.FINISH -> {
+                        binding.fabForward.isEnabled = true
+                        binding.ivRetry.isEnabled = true
                     }
                 }
             }
