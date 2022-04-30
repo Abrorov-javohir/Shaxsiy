@@ -1,6 +1,7 @@
 package com.automate123.videshorts.screen.main
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +15,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.automate123.videshorts.data.FileManager
 import com.automate123.videshorts.databinding.FragmentVideoBinding
+import com.automate123.videshorts.extension.isGranted
 import com.automate123.videshorts.service.CameraProvider
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
@@ -88,12 +90,16 @@ class VideoFragment : Fragment() {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun startRecording() {
+        val context = requireContext()
         stopRecording()
         recording = videoCapture.output
-            .prepareRecording(requireContext(), fileManager.getMediaOptions(0))
+            .prepareRecording(context, fileManager.getMediaOptions(0))
             .apply {
-                withAudioEnabled()
+                if (context.isGranted(Manifest.permission.RECORD_AUDIO)) {
+                    withAudioEnabled()
+                }
             }
             .start(mainExecutor) {
 
