@@ -51,6 +51,7 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_baseline_fast_forward_24"
                 app:backgroundTint="@android:color/white"
+                app:elevation="0dp"
                 app:fabCustomSize="90dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
