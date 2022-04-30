@@ -5,9 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import com.automate123.videshorts.databinding.FragmentControlsBinding
 
 class ControlsFragment : Fragment() {
+
+    private val viewModel: MainViewModel by activityViewModels()
 
     private lateinit var binding: FragmentControlsBinding
 
@@ -17,5 +20,8 @@ class ControlsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.fabForward.setOnClickListener {
+
+        }
     }
 }
