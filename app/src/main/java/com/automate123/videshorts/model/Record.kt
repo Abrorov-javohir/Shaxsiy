@@ -9,8 +9,6 @@ class Record(
     val position: Int
 ) {
 
-    constructor() : this(State.ENDED, 0)
-
     enum class State {
         STARTING,
         STARTED,

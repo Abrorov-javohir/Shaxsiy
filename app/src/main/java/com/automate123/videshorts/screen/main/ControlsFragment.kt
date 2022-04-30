@@ -32,17 +32,13 @@ class ControlsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.record.collect {
                 when (it.state) {
-                    Record.State.STARTING -> {
+                    Record.State.STARTING, Record.State.ENDING -> {
                         binding.fabForward.isEnabled = false
                         binding.ivRetry.isEnabled = false
                     }
                     Record.State.STARTED -> {
                         binding.fabForward.isEnabled = false
                         binding.ivRetry.isEnabled = true
-                    }
-                    Record.State.ENDING -> {
-                        binding.fabForward.isEnabled = false
-                        binding.ivRetry.isEnabled = false
                     }
                     Record.State.ENDED -> {
                         binding.fabForward.isEnabled = true
