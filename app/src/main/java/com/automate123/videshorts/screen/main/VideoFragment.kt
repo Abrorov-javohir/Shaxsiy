@@ -103,7 +103,7 @@ class VideoFragment : Fragment() {
         val context = requireContext()
         stopRecording()
         recording = videoCapture.output
-            .prepareRecording(context, fileManager.getMediaOptions(position))
+            .prepareRecording(context, fileManager.getOutputOptions(position))
             .apply {
                 if (context.isGranted(Manifest.permission.RECORD_AUDIO)) {
                     withAudioEnabled()
@@ -112,10 +112,10 @@ class VideoFragment : Fragment() {
             .start(ContextCompat.getMainExecutor(context)) {
                 when (it) {
                     is VideoRecordEvent.Start -> {
-
+                        viewModel.controller.onRecordStart()
                     }
                     is VideoRecordEvent.Finalize -> {
-
+                        viewModel.controller.onRecordEnd()
                     }
                 }
             }

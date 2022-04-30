@@ -1,26 +1,20 @@
 package com.automate123.videshorts.data
 
-import android.content.ContentValues
 import android.content.Context
-import android.provider.MediaStore
-import androidx.camera.video.MediaStoreOutputOptions
+import androidx.camera.video.FileOutputOptions
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import javax.inject.Inject
 
 class FileManager @Inject constructor(
     @ApplicationContext context: Context
 ) {
 
-    private val contentResolver = context.contentResolver
+    private val internalDir = context.filesDir
 
-    fun getMediaOptions(index: Int): MediaStoreOutputOptions {
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, index.toString())
-            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-        }
-        return MediaStoreOutputOptions
-            .Builder(contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-            .setContentValues(contentValues)
+    fun getOutputOptions(position: Int): FileOutputOptions {
+        return FileOutputOptions
+            .Builder(File(internalDir, "$position.mp4"))
             .build()
     }
 }
