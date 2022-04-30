@@ -10,19 +10,20 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.automate123.videshorts.data.FileManager
 import com.automate123.videshorts.databinding.FragmentVideoBinding
 import com.automate123.videshorts.extension.isGranted
+import com.automate123.videshorts.model.Record
 import com.automate123.videshorts.service.CameraProvider
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.concurrent.Executor
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -32,19 +33,13 @@ class VideoFragment : Fragment() {
     lateinit var permProvider: PermProvider
 
     @Inject
-    lateinit var cameraProvider: CameraProvider
-
-    @Inject
     lateinit var fileManager: FileManager
-
-    @Inject
-    lateinit var mainExecutor: Executor
 
     private val viewModel: MainViewModel by activityViewModels()
 
     private lateinit var binding: FragmentVideoBinding
 
-    private lateinit var procCamProvider: ProcessCameraProvider
+    private lateinit var cameraProvider: ProcessCameraProvider
 
     private lateinit var videoCapture: VideoCapture<Recorder>
 
@@ -60,14 +55,27 @@ class VideoFragment : Fragment() {
             permProvider.grantedPerms
                 .filter { it.contains(Manifest.permission.CAMERA) }
                 .collect {
-                    procCamProvider = cameraProvider.getInstance(requireContext())
+                    cameraProvider = CameraProvider.getInstance(requireContext())
                     startCamera()
                 }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.controller.record.collect {
+                when (it.state) {
+                    Record.State.STARTING -> {
+                        startRecording(it.position)
+                    }
+                    Record.State.ENDING -> {
+                        stopRecording()
+                    }
+                    else -> {}
+                }
+            }
         }
     }
 
     private fun startCamera() {
-        procCamProvider.unbindAll()
+        cameraProvider.unbindAll()
 
         val preview = Preview.Builder()
             .build()
@@ -79,7 +87,7 @@ class VideoFragment : Fragment() {
         videoCapture = VideoCapture.withOutput(recorder)
 
         try {
-            procCamProvider.bindToLifecycle(
+            cameraProvider.bindToLifecycle(
                 this,
                 CameraSelector.DEFAULT_BACK_CAMERA,
                 preview,
@@ -91,18 +99,25 @@ class VideoFragment : Fragment() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun startRecording() {
+    private fun startRecording(position: Int) {
         val context = requireContext()
         stopRecording()
         recording = videoCapture.output
-            .prepareRecording(context, fileManager.getMediaOptions(0))
+            .prepareRecording(context, fileManager.getMediaOptions(position))
             .apply {
                 if (context.isGranted(Manifest.permission.RECORD_AUDIO)) {
                     withAudioEnabled()
                 }
             }
-            .start(mainExecutor) {
+            .start(ContextCompat.getMainExecutor(context)) {
+                when (it) {
+                    is VideoRecordEvent.Start -> {
 
+                    }
+                    is VideoRecordEvent.Finalize -> {
+
+                    }
+                }
             }
     }
 
@@ -112,8 +127,8 @@ class VideoFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        if (::procCamProvider.isInitialized) {
-            procCamProvider.unbindAll()
+        if (::cameraProvider.isInitialized) {
+            cameraProvider.unbindAll()
         }
         super.onDestroyView()
     }
