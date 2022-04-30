@@ -5,17 +5,12 @@ import android.content.Context
 import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.CameraXConfig
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.util.concurrent.Executor
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlin.coroutines.resume
 
-@Singleton
 @SuppressLint("UnsafeOptInUsageError")
-class CameraProvider @Inject constructor(
-    private val mainExecutor: Executor
-) {
+object CameraProvider {
 
     init {
         ProcessCameraProvider.configureInstance(
@@ -34,7 +29,7 @@ class CameraProvider @Inject constructor(
                 } else {
                     continuation.cancel()
                 }
-            }, mainExecutor)
+            }, ContextCompat.getMainExecutor(context))
             continuation.invokeOnCancellation {
                 future.cancel(false)
             }
