@@ -4,15 +4,18 @@ import androidx.annotation.IntRange
 import com.automate123.videshorts.MAX_SHORTS
 
 class Record(
-    val state: State,
-    @IntRange(from = 0L, to = MAX_SHORTS.toLong())
-    val position: Int
+    val state: State = State.NONE,
+    val isFinalState: Boolean = true,
+    @IntRange(from = 1L, to = MAX_SHORTS.toLong())
+    val position: Int = 1
 ) {
 
     enum class State {
-        STARTING,
-        STARTED,
-        ENDING,
-        ENDED
+        NONE,
+        START,
+        PAUSE,
+        RESUME,
+        END,
+        FINISH
     }
 }

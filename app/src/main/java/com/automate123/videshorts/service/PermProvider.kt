@@ -12,6 +12,8 @@ import com.automate123.videshorts.extension.isGranted
 import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.scopes.ActivityScoped
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 
 @ActivityScoped
@@ -19,7 +21,9 @@ class PermProvider @Inject constructor(
     @ActivityContext private val context: Context
 ) : DefaultLifecycleObserver {
 
-    val grantedPerms = MutableSharedFlow<List<String>>(1)
+    private val _grantedPerms = MutableSharedFlow<List<String>>(1)
+    val grantedPerms: SharedFlow<List<String>>
+        get() = _grantedPerms.asSharedFlow()
 
     private lateinit var launcher: ActivityResultLauncher<Array<String>>
 
@@ -46,7 +50,7 @@ class PermProvider @Inject constructor(
     }
 
     private fun emitGranted() {
-        grantedPerms.tryEmit(dangerPerms.filter { context.isGranted(it) })
+        _grantedPerms.tryEmit(dangerPerms.filter { context.isGranted(it) })
     }
 
     override fun onDestroy(owner: LifecycleOwner) {

@@ -18,11 +18,13 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
 
     companion object {
 
+        const val NAME = "video"
+
         fun launch(context: Context) {
             val request = OneTimeWorkRequestBuilder<VideoWorker>()
                 .build()
             with(WorkManager.getInstance(context)) {
-                enqueueUniqueWork(VideoWorker::class.java.name, ExistingWorkPolicy.REPLACE, request)
+                enqueueUniqueWork(NAME, ExistingWorkPolicy.REPLACE, request)
             }
         }
     }
