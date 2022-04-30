@@ -59,7 +59,7 @@
                 app:maxImageSize="56dp"
                 app:tint="#0d78be" />
 
-            <ImageView
+            <com.automate123.videshorts.view.ImageButton
                 android:id="@+id/iv_retry"
                 android:layout_width="68dp"
                 android:layout_height="68dp"
