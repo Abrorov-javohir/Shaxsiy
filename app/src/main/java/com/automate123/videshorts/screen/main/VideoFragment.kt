@@ -22,6 +22,7 @@ import com.automate123.videshorts.service.CameraProvider
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -60,18 +61,25 @@ class VideoFragment : Fragment() {
                 }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.record.collect {
-                when (it.state) {
-                    Record.State.STARTING -> {
-                        startRecording(it.position)
+            viewModel.controller.record
+                .filterNot { it.isFinalState }
+                .collect {
+                    when (it.state) {
+                        Record.State.START -> {
+                            startRecording(it.position)
+                        }
+                        Record.State.END -> {
+                            stopRecording()
+                        }
+                        else -> {}
                     }
-                    Record.State.ENDING -> {
-                        stopRecording()
-                    }
-                    else -> {}
                 }
-            }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        recording?.resume()
     }
 
     private fun startCamera() {
@@ -110,14 +118,7 @@ class VideoFragment : Fragment() {
                 }
             }
             .start(ContextCompat.getMainExecutor(context)) {
-                when (it) {
-                    is VideoRecordEvent.Start -> {
-                        viewModel.controller.onRecordStart()
-                    }
-                    is VideoRecordEvent.Finalize -> {
-                        viewModel.controller.onRecordEnd()
-                    }
-                }
+                viewModel.controller.onRecordEvent(it)
             }
     }
 
@@ -126,7 +127,13 @@ class VideoFragment : Fragment() {
         recording = null
     }
 
+    override fun onPause() {
+        recording?.pause()
+        super.onPause()
+    }
+
     override fun onDestroyView() {
+        stopRecording()
         if (::cameraProvider.isInitialized) {
             cameraProvider.unbindAll()
         }
