@@ -13,8 +13,6 @@ class Record(
     enum class State {
         NONE,
         START,
-        PAUSE,
-        RESUME,
         END,
         FINISH
     }

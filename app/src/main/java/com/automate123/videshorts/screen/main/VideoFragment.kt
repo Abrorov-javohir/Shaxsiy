@@ -77,11 +77,6 @@ class VideoFragment : Fragment() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        recording?.resume()
-    }
-
     private fun startCamera() {
         cameraProvider.unbindAll()
 
@@ -127,13 +122,12 @@ class VideoFragment : Fragment() {
         recording = null
     }
 
-    override fun onPause() {
-        recording?.pause()
-        super.onPause()
+    override fun onStop() {
+        stopRecording()
+        super.onStop()
     }
 
     override fun onDestroyView() {
-        stopRecording()
         if (::cameraProvider.isInitialized) {
             cameraProvider.unbindAll()
         }

@@ -40,14 +40,6 @@ class ControlsFragment : Fragment() {
                         binding.fabForward.isEnabled = false
                         binding.ivRetry.isEnabled = it.isFinalState
                     }
-                    Record.State.PAUSE -> {
-                        binding.fabForward.isEnabled = false
-                        binding.ivRetry.isEnabled = false
-                    }
-                    Record.State.RESUME -> {
-                        binding.fabForward.isEnabled = false
-                        binding.ivRetry.isEnabled = true
-                    }
                     Record.State.END -> {
                         binding.fabForward.isEnabled = it.isFinalState
                         binding.ivRetry.isEnabled = it.isFinalState
