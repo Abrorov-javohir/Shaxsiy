@@ -1,6 +1,7 @@
 package com.automate123.videshorts.service
 
 import android.content.Context
+import androidx.lifecycle.LiveData
 import androidx.work.*
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
@@ -20,9 +21,8 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
             val sessions = mutableListOf<Session>()
             try {
                 withContext(Dispatchers.IO) {
-                    val dir = File(cacheDir, dirname).also {
-                        it.mkdirs()
-                    }
+                    val dir = File(cacheDir, dirname)
+                    require(dir.exists())
                     val videoFiles = dir.listFiles()
                         .filter { it.name.matches("^[0-9]+\\.mp4$".toRegex()) }
                     val outputFile = File(dir, "$id.mp4")
@@ -53,7 +53,7 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
 
         private const val EXTRA_DIRNAME = "dirname"
 
-        fun launch(context: Context, dirname: String) {
+        fun launch(context: Context, dirname: String): LiveData<WorkInfo> {
             val request = OneTimeWorkRequestBuilder<VideoWorker>()
                 .setInputData(Data.Builder()
                     .putString(EXTRA_DIRNAME, dirname)
@@ -61,6 +61,7 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
                 .build()
             with(WorkManager.getInstance(context)) {
                 enqueueUniqueWork(NAME, ExistingWorkPolicy.REPLACE, request)
+                return getWorkInfoByIdLiveData(request.id)
             }
         }
 
