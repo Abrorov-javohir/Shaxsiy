@@ -68,7 +68,7 @@ class VideoTest {
                         }
                     }
                 }.flowOn(Dispatchers.Main)
-                    .first { it.state == WorkInfo.State.SUCCEEDED }
+                    .first { it.state in finishStates }
                 println("Time: ${System.currentTimeMillis() - start} ms")
             }
         }
@@ -81,5 +81,7 @@ class VideoTest {
     companion object {
 
         private const val DIRNAME = "test"
+
+        private val finishStates = arrayOf(WorkInfo.State.SUCCEEDED, WorkInfo.State.FAILED)
     }
 }
