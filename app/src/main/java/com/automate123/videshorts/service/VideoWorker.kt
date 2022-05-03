@@ -13,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
-import java.time.Instant
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
@@ -34,7 +34,7 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
                     check(videoFiles.isNotEmpty())
                 }
 
-                val outputFile = File(dir, nameFormatter.format(Instant.now()))
+                val outputFile = File(dir, nameFormatter.format(LocalDateTime.now()))
                 val outputData = Data.Builder()
                     .putString(EXTRA_FILENAME, outputFile.name)
                     .build()
