@@ -30,6 +30,11 @@ class ControlsFragment : Fragment() {
             viewModel.controller.recordAgain()
         }
         viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.preview.collect {
+                binding.ivThumb.setImageBitmap(it)
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.record.collect {
                 when (it.state) {
                     Record.State.NONE -> {
