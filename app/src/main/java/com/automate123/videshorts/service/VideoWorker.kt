@@ -6,12 +6,15 @@ import androidx.work.*
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import com.arthenica.ffmpegkit.Session
+import com.automate123.videshorts.EXTRA_FILENAME
 import com.automate123.videshorts.extension.qPath
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 
 class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
 
@@ -31,13 +34,16 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
                     check(videoFiles.isNotEmpty())
                 }
 
-                val outputFile = File(dir, "$id.mp4")
+                val outputFile = File(dir, nameFormatter.format(Instant.now()))
+                val outputData = Data.Builder()
+                    .putString(EXTRA_FILENAME, outputFile.name)
+                    .build()
 
                 if (videoFiles.size < 2) {
                     withContext(Dispatchers.IO) {
                         videoFiles.first().copyTo(outputFile)
                     }
-                    return Result.success()
+                    return Result.success(outputData)
                 }
 
                 withContext(Dispatchers.IO) {
@@ -48,7 +54,7 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
                         throw Throwable(sessions.last().failStackTrace)
                     }
                 }
-                return Result.success()
+                return Result.success(outputData)
             } catch (e: CancellationException) {
                 sessions.forEach {
                     FFmpegKit.cancel(it.sessionId)
@@ -65,6 +71,8 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
         const val NAME = "video"
 
         private const val EXTRA_DIRNAME = "dirname"
+
+        private val nameFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss'.mp4'")
 
         fun launch(context: Context, dirname: String): LiveData<WorkInfo> {
             val request = OneTimeWorkRequestBuilder<VideoWorker>()

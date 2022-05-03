@@ -40,24 +40,21 @@ class VideoTest {
     @Before
     fun init() {
         hiltRule.inject()
-        with(appContext) {
-            val testDir = File(cacheDir, DIRNAME)
-            testDir.deleteRecursively()
-            testDir.mkdirs()
-        }
     }
 
     @Test
     fun concatFiles() {
         with(appContext) {
             val testDir = File(cacheDir, DIRNAME)
+            testDir.deleteRecursively()
+            testDir.mkdirs()
             val assets = instrContext.assets
             assets.open("1VR.mp4").copyTo(FileOutputStream(File(testDir, "1.mp4")))
             assets.open("2HL.mp4").copyTo(FileOutputStream(File(testDir, "2.mp4")))
             assets.open("2VR.mp4").copyTo(FileOutputStream(File(testDir, "3.mp4")))
             assets.open("3HB.mp4").copyTo(FileOutputStream(File(testDir, "4.mp4")))
-            assets.open("4HR.mp4").copyTo(FileOutputStream(File(testDir, "5.mp4")))
-            assets.open("4VL.mp4").copyTo(FileOutputStream(File(testDir, "6.mp4")))
+            assets.open("4HL.mp4").copyTo(FileOutputStream(File(testDir, "5.mp4")))
+            assets.open("4VR.mp4").copyTo(FileOutputStream(File(testDir, "6.mp4")))
             runBlocking {
                 val start = System.currentTimeMillis()
                 callbackFlow<WorkInfo> {
