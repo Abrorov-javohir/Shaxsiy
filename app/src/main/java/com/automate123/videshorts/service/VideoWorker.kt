@@ -2,29 +2,71 @@ package com.automate123.videshorts.service
 
 import android.content.Context
 import androidx.work.*
+import com.arthenica.ffmpegkit.FFmpegKit
+import com.arthenica.ffmpegkit.ReturnCode
+import com.arthenica.ffmpegkit.Session
+import com.automate123.videshorts.extension.qPath
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
+import java.io.File
 
 class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
 
     override suspend fun doWork(): Result {
         with(applicationContext) {
-            withContext(Dispatchers.IO) {
+            val dirname = inputData.getString(EXTRA_DIRNAME)!!
+            val sessions = mutableListOf<Session>()
+            try {
+                withContext(Dispatchers.IO) {
+                    val dir = File(cacheDir, dirname).also {
+                        it.mkdirs()
+                    }
+                    val videoFiles = dir.listFiles()
+                        .filter { it.name.matches("^[0-9]+\\.mp4$".toRegex()) }
+                    val outputFile = File(dir, "$id.mp4")
 
+                    // concat files
+                    val listFile = File(dir, "$id.txt")
+                    listFile.writeText(videoFiles.joinToString("\n") { "file ${it.qPath}" })
+                    sessions.add(FFmpegKit.execute("-y -f concat -safe 0 -i ${listFile.qPath} -c copy ${outputFile.qPath}"))
+                    if (!ReturnCode.isSuccess(sessions.last().returnCode)) {
+                        throw Throwable(sessions.last().failStackTrace)
+                    }
+                }
+                return Result.success()
+            } catch (e: CancellationException) {
+                sessions.forEach {
+                    FFmpegKit.cancel(it.sessionId)
+                }
+            } catch (e: Throwable) {
+                Timber.e(e)
             }
-            return Result.success()
         }
+        return Result.failure()
     }
 
     companion object {
 
         const val NAME = "video"
 
-        fun launch(context: Context) {
+        private const val EXTRA_DIRNAME = "dirname"
+
+        fun launch(context: Context, dirname: String) {
             val request = OneTimeWorkRequestBuilder<VideoWorker>()
+                .setInputData(Data.Builder()
+                    .putString(EXTRA_DIRNAME, dirname)
+                    .build())
                 .build()
             with(WorkManager.getInstance(context)) {
                 enqueueUniqueWork(NAME, ExistingWorkPolicy.REPLACE, request)
+            }
+        }
+
+        fun cancel(context: Context) {
+            with(WorkManager.getInstance(context)) {
+                cancelUniqueWork(NAME)
             }
         }
     }
