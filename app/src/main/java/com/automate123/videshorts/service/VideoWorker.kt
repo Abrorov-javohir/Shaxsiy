@@ -20,14 +20,27 @@ class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWor
             val dirname = inputData.getString(EXTRA_DIRNAME)!!
             val sessions = mutableListOf<Session>()
             try {
-                withContext(Dispatchers.IO) {
-                    val dir = File(cacheDir, dirname)
-                    require(dir.exists())
-                    val videoFiles = dir.listFiles()
-                        .filter { it.name.matches("^[0-9]+\\.mp4$".toRegex()) }
-                    val outputFile = File(dir, "$id.mp4")
+                val dir = File(cacheDir, dirname)
+                check(dir.exists())
 
-                    // concat files
+                val videoFiles = mutableListOf<File>()
+                withContext(Dispatchers.IO) {
+                    videoFiles.addAll(dir.listFiles()
+                        .filter { it.name.matches("^[0-9]+\\.mp4$".toRegex()) }
+                        .sorted())
+                    check(videoFiles.isNotEmpty())
+                }
+
+                val outputFile = File(dir, "$id.mp4")
+
+                if (videoFiles.size < 2) {
+                    withContext(Dispatchers.IO) {
+                        videoFiles.first().copyTo(outputFile)
+                    }
+                    return Result.success()
+                }
+
+                withContext(Dispatchers.IO) {
                     val listFile = File(dir, "$id.txt")
                     listFile.writeText(videoFiles.joinToString("\n") { "file ${it.qPath}" })
                     sessions.add(FFmpegKit.execute("-y -f concat -safe 0 -i ${listFile.qPath} -c copy ${outputFile.qPath}"))

@@ -52,10 +52,14 @@ class VideoTest {
         with(appContext) {
             val testDir = File(cacheDir, DIRNAME)
             val assets = instrContext.assets
-            assets.open("1.mp4").copyTo(FileOutputStream(File(testDir, "1.mp4")))
-            assets.open("2.mp4").copyTo(FileOutputStream(File(testDir, "2.mp4")))
-            assets.open("2a.mp4").copyTo(FileOutputStream(File(testDir, "3.mp4")))
+            assets.open("1VR.mp4").copyTo(FileOutputStream(File(testDir, "1.mp4")))
+            assets.open("2HL.mp4").copyTo(FileOutputStream(File(testDir, "2.mp4")))
+            assets.open("2VR.mp4").copyTo(FileOutputStream(File(testDir, "3.mp4")))
+            assets.open("3HB.mp4").copyTo(FileOutputStream(File(testDir, "4.mp4")))
+            assets.open("4HR.mp4").copyTo(FileOutputStream(File(testDir, "5.mp4")))
+            assets.open("4VL.mp4").copyTo(FileOutputStream(File(testDir, "6.mp4")))
             runBlocking {
+                val start = System.currentTimeMillis()
                 callbackFlow<WorkInfo> {
                     val observer = Observer<WorkInfo> {
                         trySend(it)
@@ -68,6 +72,7 @@ class VideoTest {
                     }
                 }.flowOn(Dispatchers.Main)
                     .first { it.state == WorkInfo.State.SUCCEEDED }
+                println("Time: ${System.currentTimeMillis() - start} ms")
             }
         }
     }
