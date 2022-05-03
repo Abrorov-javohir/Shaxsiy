@@ -12,8 +12,8 @@ import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -54,8 +54,9 @@ class VideoTest {
             val assets = instrContext.assets
             assets.open("1.mp4").copyTo(FileOutputStream(File(testDir, "1.mp4")))
             assets.open("2.mp4").copyTo(FileOutputStream(File(testDir, "2.mp4")))
+            assets.open("2a.mp4").copyTo(FileOutputStream(File(testDir, "3.mp4")))
             runBlocking {
-                val info = callbackFlow<WorkInfo> {
+                callbackFlow<WorkInfo> {
                     val observer = Observer<WorkInfo> {
                         trySend(it)
                     }
@@ -66,8 +67,7 @@ class VideoTest {
                         }
                     }
                 }.flowOn(Dispatchers.Main)
-                    .single()
-                assert(info.state == WorkInfo.State.SUCCEEDED)
+                    .first { it.state == WorkInfo.State.SUCCEEDED }
             }
         }
     }
