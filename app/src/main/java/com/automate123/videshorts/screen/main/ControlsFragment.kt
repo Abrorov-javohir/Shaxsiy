@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.automate123.videshorts.databinding.FragmentControlsBinding
-import com.automate123.videshorts.model.Record
+import com.automate123.videshorts.model.RecordState
 import kotlinx.coroutines.launch
 
 class ControlsFragment : Fragment() {
@@ -35,24 +35,19 @@ class ControlsFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.record.collect {
-                when (it.state) {
-                    Record.State.NONE -> {
+            viewModel.controller.state.collect {
+                when (it) {
+                    RecordState.FREE -> {
                         binding.fabForward.isEnabled = true
-                        binding.ivRetry.isEnabled = false
+                        binding.ivRetry.isEnabled = viewModel.controller.position > 0
                     }
-                    Record.State.START -> {
+                    RecordState.BUSY -> {
                         binding.fabForward.isEnabled = false
-                        binding.ivRetry.isEnabled = it.isFinalState
-                    }
-                    Record.State.END -> {
-                        binding.fabForward.isEnabled = it.isFinalState
-                        binding.ivRetry.isEnabled = it.isFinalState
-                        // todo loading thumb
-                    }
-                    Record.State.FINISH -> {
-                        binding.fabForward.isEnabled = true
                         binding.ivRetry.isEnabled = true
+                    }
+                    else -> {
+                        binding.fabForward.isEnabled = false
+                        binding.ivRetry.isEnabled = false
                     }
                 }
             }
