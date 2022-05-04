@@ -1,19 +1,15 @@
 package defpackage.videoshorts
 
 import android.content.Context
-import androidx.lifecycle.Observer
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.WorkInfo
+import com.automate123.videshorts.extension.asFlow
 import com.automate123.videshorts.service.VideoWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -57,17 +53,8 @@ class VideoTest {
             assets.open("4VR.mp4").copyTo(FileOutputStream(File(testDir, "6.mp4")))
             runBlocking {
                 val start = System.currentTimeMillis()
-                callbackFlow<WorkInfo> {
-                    val observer = Observer<WorkInfo> {
-                        trySend(it)
-                    }
-                    VideoWorker.launch(applicationContext, DIRNAME).also {
-                        it.observeForever(observer)
-                        awaitClose {
-                            it.removeObserver(observer)
-                        }
-                    }
-                }.flowOn(Dispatchers.Main)
+                VideoWorker.launch(applicationContext, DIRNAME)
+                    .asFlow()
                     .first { it.state in finishStates }
                 println("Time: ${System.currentTimeMillis() - start} ms")
             }
@@ -82,6 +69,10 @@ class VideoTest {
 
         private const val DIRNAME = "test"
 
-        private val finishStates = arrayOf(WorkInfo.State.SUCCEEDED, WorkInfo.State.FAILED)
+        private val finishStates = arrayOf(
+            WorkInfo.State.SUCCEEDED,
+            WorkInfo.State.FAILED,
+            WorkInfo.State.CANCELLED
+        )
     }
 }
