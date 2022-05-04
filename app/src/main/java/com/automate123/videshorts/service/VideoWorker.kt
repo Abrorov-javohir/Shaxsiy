@@ -1,6 +1,7 @@
 package com.automate123.videshorts.service
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.lifecycle.LiveData
 import androidx.work.*
 import com.arthenica.ffmpegkit.FFmpegKit
@@ -8,6 +9,7 @@ import com.arthenica.ffmpegkit.ReturnCode
 import com.arthenica.ffmpegkit.Session
 import com.automate123.videshorts.EXTRA_FILENAME
 import com.automate123.videshorts.extension.qPath
+import dagger.assisted.Assisted
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,7 +18,11 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class VideoWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
+@HiltWorker
+class VideoWorker(
+    @Assisted context: Context,
+    @Assisted parameters: WorkerParameters
+) : CoroutineWorker(context, parameters) {
 
     override suspend fun doWork(): Result {
         with(applicationContext) {
