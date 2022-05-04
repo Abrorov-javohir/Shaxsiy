@@ -16,4 +16,4 @@ fun <T> LiveData<T>.asFlow(): Flow<T> = callbackFlow {
     awaitClose {
         removeObserver(observer)
     }
-}.flowOn(Dispatchers.Main)
+}.flowOn(Dispatchers.Main.immediate)
