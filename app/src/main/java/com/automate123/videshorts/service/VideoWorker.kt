@@ -10,6 +10,7 @@ import com.arthenica.ffmpegkit.Session
 import com.automate123.videshorts.EXTRA_FILENAME
 import com.automate123.videshorts.extension.qPath
 import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -19,9 +20,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @HiltWorker
-class VideoWorker(
+class VideoWorker @AssistedInject constructor(
     @Assisted context: Context,
-    @Assisted parameters: WorkerParameters
+    @Assisted parameters: WorkerParameters,
+    private val rootDir: File
 ) : CoroutineWorker(context, parameters) {
 
     override suspend fun doWork(): Result {
@@ -29,38 +31,37 @@ class VideoWorker(
             val dirname = inputData.getString(EXTRA_DIRNAME)!!
             val sessions = mutableListOf<Session>()
             try {
-                val dir = File(cacheDir, dirname)
-                check(dir.exists())
+                val workDir = File(rootDir, dirname)
+                check(workDir.exists())
 
                 val videoFiles = mutableListOf<File>()
                 withContext(Dispatchers.IO) {
-                    videoFiles.addAll(dir.listFiles()
-                        .filter { it.name.matches("^[0-9]+\\.mp4$".toRegex()) }
-                        .sorted())
+                    videoFiles.addAll(workDir.listFiles()
+                        ?.filter { it.name.matches("^[0-9]+\\.mp4$".toRegex()) }
+                        ?.sorted()
+                        .orEmpty())
                     check(videoFiles.isNotEmpty())
                 }
 
-                val outputFile = File(dir, nameFormatter.format(LocalDateTime.now()))
-                val outputData = Data.Builder()
-                    .putString(EXTRA_FILENAME, outputFile.name)
-                    .build()
+                val outputFile = File(workDir, nameFormatter.format(LocalDateTime.now()))
 
                 if (videoFiles.size < 2) {
                     withContext(Dispatchers.IO) {
-                        videoFiles.first().copyTo(outputFile)
+                        videoFiles.first().copyTo(outputFile, true)
                     }
-                    return Result.success(outputData)
+                    return Result.success(workDataOf(EXTRA_FILENAME to outputFile.name))
                 }
 
                 withContext(Dispatchers.IO) {
-                    val listFile = File(dir, "$id.txt")
+                    val listFile = File(workDir, "$id.txt")
                     listFile.writeText(videoFiles.joinToString("\n") { "file ${it.qPath}" })
+
                     sessions.add(FFmpegKit.execute("-y -f concat -safe 0 -i ${listFile.qPath} -c copy ${outputFile.qPath}"))
                     if (!ReturnCode.isSuccess(sessions.last().returnCode)) {
                         throw Throwable(sessions.last().failStackTrace)
                     }
                 }
-                return Result.success(outputData)
+                return Result.success(workDataOf(EXTRA_FILENAME to outputFile.name))
             } catch (e: CancellationException) {
                 sessions.forEach {
                     FFmpegKit.cancel(it.sessionId)
