@@ -14,15 +14,12 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import com.automate123.videshorts.data.FileManager
+import androidx.work.await
 import com.automate123.videshorts.databinding.FragmentVideoBinding
 import com.automate123.videshorts.extension.isGranted
-import com.automate123.videshorts.model.Record
-import com.automate123.videshorts.service.CameraProvider
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -32,9 +29,6 @@ class VideoFragment : Fragment() {
 
     @Inject
     lateinit var permProvider: PermProvider
-
-    @Inject
-    lateinit var fileManager: FileManager
 
     private val viewModel: MainViewModel by activityViewModels()
 
@@ -56,22 +50,18 @@ class VideoFragment : Fragment() {
             permProvider.grantedPerms
                 .filter { it.contains(Manifest.permission.CAMERA) }
                 .collect {
-                    cameraProvider = CameraProvider.getInstance(requireContext())
+                    cameraProvider = ProcessCameraProvider.getInstance(requireContext())
+                        .await()
                     startCamera()
                 }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.record
-                .filterNot { it.isFinalState }
+            viewModel.controller.input
                 .collect {
-                    when (it.state) {
-                        Record.State.START -> {
-                            startRecording(it.position)
-                        }
-                        Record.State.END -> {
-                            stopRecording()
-                        }
-                        else -> {}
+                    if (it != null) {
+                        startRecording(it)
+                    } else {
+                        stopRecording()
                     }
                 }
         }
@@ -102,11 +92,11 @@ class VideoFragment : Fragment() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun startRecording(position: Int) {
+    private fun startRecording(options: FileOutputOptions) {
         val context = requireContext()
         stopRecording()
         recording = videoCapture.output
-            .prepareRecording(context, fileManager.getOutputOptions(position))
+            .prepareRecording(context, options)
             .apply {
                 if (context.isGranted(Manifest.permission.RECORD_AUDIO)) {
                     withAudioEnabled()
