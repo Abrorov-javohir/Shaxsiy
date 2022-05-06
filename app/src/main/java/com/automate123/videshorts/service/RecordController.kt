@@ -4,13 +4,16 @@ import android.content.Context
 import androidx.camera.video.FileOutputOptions
 import androidx.camera.video.VideoRecordEvent
 import androidx.work.WorkInfo
-import com.automate123.videshorts.EXTRA_FILENAME
+import com.automate123.videshorts.KEY_FILENAME
 import com.automate123.videshorts.MAX_SHORTS
 import com.automate123.videshorts.extension.asFlow
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 import java.io.File
 import java.time.Instant
@@ -26,7 +29,7 @@ class RecordController @Inject constructor(
     var isCameraBound = false
 
     private val _isBusy = MutableStateFlow(false)
-    val isCapturing = _isBusy.asStateFlow()
+    val isBusy = _isBusy.asStateFlow()
 
     private val _currentPosition = MutableStateFlow(0)
     val currentPosition = _currentPosition.asStateFlow()
@@ -61,18 +64,18 @@ class RecordController @Inject constructor(
         if (!isCameraBound) {
             return
         }
-        captureJob?.cancel()
+        parentJob.cancelChildren()
 
         position++
-        _inputOptions.tryEmit(getOutputOptions())
+        _inputOptions.tryEmit(getCurrentOptions())
     }
 
     fun recordAgain() {
         if (!isCameraBound) {
             return
         }
-        captureJob?.cancel()
-        _inputOptions.tryEmit(getOutputOptions())
+        parentJob.cancelChildren()
+        _inputOptions.tryEmit(getCurrentOptions())
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
@@ -85,29 +88,32 @@ class RecordController @Inject constructor(
                 }
             }
             is VideoRecordEvent.Finalize -> {
-                _isBusy.tryEmit(false)
                 if (position >= MAX_SHORTS) {
                     processJob = launch {
-                        val workDir = File(rootDir, startTime.toString())
+                        _isBusy.emit(true)
                         VideoWorker.launch(context, workDir.name)
                             .asFlow()
                             .collect {
                                 when (it.state) {
                                     WorkInfo.State.SUCCEEDED -> {
-                                        _outputFile.emit(info.outputData.getString(EXTRA_FILENAME))
+                                        val filename = it.outputData.getString(KEY_FILENAME)!!
+                                        _outputFile.emit(File(workDir, filename))
+                                        _isBusy.emit(false)
                                     }
-                                    WorkInfo.State.FAILED -> throw Throwable()
+                                    WorkInfo.State.FAILED -> throw RuntimeException()
                                     else -> {}
                                 }
                             }
                     }
+                } else {
+                    _isBusy.tryEmit(false)
                 }
             }
             else -> {}
         }
     }
 
-    private fun getOutputOptions(): FileOutputOptions {
+    private fun getCurrentOptions(): FileOutputOptions {
         return FileOutputOptions
             .Builder(File(workDir, "$position.mp4"))
             .build()

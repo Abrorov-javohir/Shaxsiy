@@ -7,7 +7,7 @@ import androidx.work.*
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import com.arthenica.ffmpegkit.Session
-import com.automate123.videshorts.EXTRA_FILENAME
+import com.automate123.videshorts.KEY_FILENAME
 import com.automate123.videshorts.extension.qPath
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -28,7 +28,7 @@ class VideoWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         with(applicationContext) {
-            val dirname = inputData.getString(EXTRA_DIRNAME)!!
+            val dirname = inputData.getString(KEY_DIRNAME)!!
             val sessions = mutableListOf<Session>()
             try {
                 val workDir = File(rootDir, dirname)
@@ -49,7 +49,7 @@ class VideoWorker @AssistedInject constructor(
                     withContext(Dispatchers.IO) {
                         videoFiles.first().copyTo(outputFile, true)
                     }
-                    return Result.success(workDataOf(EXTRA_FILENAME to outputFile.name))
+                    return Result.success(workDataOf(KEY_FILENAME to outputFile.name))
                 }
 
                 withContext(Dispatchers.IO) {
@@ -63,7 +63,7 @@ class VideoWorker @AssistedInject constructor(
                         throw Throwable(sessions.last().failStackTrace)
                     }
                 }
-                return Result.success(workDataOf(EXTRA_FILENAME to outputFile.name))
+                return Result.success(workDataOf(KEY_FILENAME to outputFile.name))
             } catch (e: CancellationException) {
                 sessions.forEach {
                     FFmpegKit.cancel(it.sessionId)
@@ -79,14 +79,14 @@ class VideoWorker @AssistedInject constructor(
 
         const val NAME = "video"
 
-        private const val EXTRA_DIRNAME = "dirname"
+        private const val KEY_DIRNAME = "dirname"
 
         private val nameFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss'.mp4'")
 
         fun launch(context: Context, dirname: String): LiveData<WorkInfo> {
             val request = OneTimeWorkRequestBuilder<VideoWorker>()
                 .setInputData(Data.Builder()
-                    .putString(EXTRA_DIRNAME, dirname)
+                    .putString(KEY_DIRNAME, dirname)
                     .build())
                 .build()
             with(WorkManager.getInstance(context)) {
