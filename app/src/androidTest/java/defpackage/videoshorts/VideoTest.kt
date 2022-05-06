@@ -5,10 +5,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.WorkInfo
 import com.automate123.videshorts.extension.asFlow
+import com.automate123.videshorts.extension.rootDir
 import com.automate123.videshorts.service.VideoWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -41,7 +43,7 @@ class VideoTest {
     @Test
     fun concatFiles() {
         with(appContext) {
-            val testDir = File(cacheDir, DIRNAME)
+            val testDir = File(rootDir, DIRNAME)
             testDir.deleteRecursively()
             testDir.mkdirs()
             val assets = instrContext.assets
@@ -51,20 +53,23 @@ class VideoTest {
             assets.open("3HB.mp4").copyTo(FileOutputStream(File(testDir, "4.mp4")))
             assets.open("4HL.mp4").copyTo(FileOutputStream(File(testDir, "5.mp4")))
             assets.open("4VR.mp4").copyTo(FileOutputStream(File(testDir, "6.mp4")))
-            runBlocking {
-                val start = System.currentTimeMillis()
-                VideoWorker.launch(applicationContext, DIRNAME)
-                    .asFlow()
-                    .collect {
-                        when (it.state) {
-                            WorkInfo.State.SUCCEEDED -> {
-                                println("Time: ${System.currentTimeMillis() - start} ms")
-                                coroutineContext.job.cancel()
+            try {
+                runBlocking {
+                    val start = System.currentTimeMillis()
+                    VideoWorker.launch(applicationContext, DIRNAME)
+                        .asFlow()
+                        .collect {
+                            when (it.state) {
+                                WorkInfo.State.SUCCEEDED -> {
+                                    println("Time: ${System.currentTimeMillis() - start} ms")
+                                    coroutineContext.job.cancel()
+                                }
+                                WorkInfo.State.FAILED -> throw RuntimeException()
+                                else -> {}
                             }
-                            WorkInfo.State.FAILED -> throw RuntimeException()
-                            else -> {}
                         }
-                    }
+                }
+            } catch (ignored: CancellationException) {
             }
         }
     }
