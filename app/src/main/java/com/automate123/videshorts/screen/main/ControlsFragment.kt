@@ -36,10 +36,10 @@ class ControlsFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             combine(
-                viewModel.controller.isCapturing,
+                viewModel.controller.isRecording,
                 viewModel.controller.isProcessing
-            ) { isCapturing, isProcessing ->
-                isCapturing || isProcessing
+            ) { isRecording, isProcessing ->
+                isRecording || isProcessing
             }.collect { isBusy ->
                 val position = viewModel.controller.currentPosition.value
                 if (isBusy) {

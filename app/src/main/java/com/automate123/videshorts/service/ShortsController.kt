@@ -1,12 +1,12 @@
 package com.automate123.videshorts.service
 
 import android.content.Context
-import androidx.camera.video.FileOutputOptions
 import androidx.camera.video.VideoRecordEvent
 import androidx.work.WorkInfo
 import com.automate123.videshorts.KEY_FILENAME
 import com.automate123.videshorts.MAX_SHORTS
 import com.automate123.videshorts.extension.asFlow
+import com.automate123.videshorts.extension.currentTimeInSeconds
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.*
@@ -16,11 +16,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 import java.io.File
-import java.time.Instant
 import javax.inject.Inject
 
 @ViewModelScoped
-class RecordController @Inject constructor(
+class ShortsController @Inject constructor(
     @ApplicationContext private val context: Context,
     private val rootDir: File
 ) : CoroutineScope {
@@ -28,8 +27,8 @@ class RecordController @Inject constructor(
     @Volatile
     var isCameraBound = false
 
-    private val _isCapturing = MutableStateFlow(false)
-    val isCapturing = _isCapturing.asStateFlow()
+    private val _isRecording = MutableStateFlow(false)
+    val isRecording = _isRecording.asStateFlow()
 
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing = _isProcessing.asStateFlow()
@@ -42,17 +41,17 @@ class RecordController @Inject constructor(
     private val _currentPosition = MutableStateFlow(position)
     val currentPosition = _currentPosition.asStateFlow()
 
-    private val _inputOptions = MutableSharedFlow<FileOutputOptions?>()
-    val inputOptions = _inputOptions.asSharedFlow()
+    private val _inputFile = MutableSharedFlow<File?>()
+    val inputFile = _inputFile.asSharedFlow()
 
     private val _outputFile = MutableSharedFlow<File>()
     val outputFile = _outputFile.asSharedFlow()
 
-    private var startTime = Instant.now().epochSecond
+    private var startTime = currentTimeInSeconds()
 
     private val parentJob = SupervisorJob()
 
-    private var captureJob: Job? = null
+    private var recordJob: Job? = null
 
     private var processJob: Job? = null
 
@@ -63,18 +62,20 @@ class RecordController @Inject constructor(
     private val workDir: File
         get() = File(rootDir, startTime.toString())
 
-    private val currentOptions: FileOutputOptions
-        get() = FileOutputOptions.Builder(File(workDir, "$position.mp4"))
-            .build()
-
     fun recordNext() {
         if (!isCameraBound) {
             return
         }
         parentJob.cancelChildren()
-
-        position++
-        _inputOptions.tryEmit(currentOptions)
+        if (position >= MAX_SHORTS) {
+            position = 1
+        } else {
+            position++
+        }
+        if (position == 1) {
+            startTime = currentTimeInSeconds()
+        }
+        _inputFile.tryEmit(File(workDir, "$position.mp4"))
     }
 
     fun recordAgain() {
@@ -82,20 +83,20 @@ class RecordController @Inject constructor(
             return
         }
         parentJob.cancelChildren()
-        _inputOptions.tryEmit(currentOptions)
+        _inputFile.tryEmit(File(workDir, "$position.mp4"))
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
         when (event) {
             is VideoRecordEvent.Start -> {
-                captureJob = launch {
-                    _isCapturing.emit(true)
+                _isRecording.tryEmit(true)
+                recordJob = launch {
                     delay(2000L)
-                    _inputOptions.emit(null)
+                    _inputFile.emit(null)
                 }
             }
             is VideoRecordEvent.Finalize -> {
-                _isCapturing.tryEmit(false)
+                _isRecording.tryEmit(false)
                 if (position >= MAX_SHORTS) {
                     processJob = launch {
                         _isProcessing.emit(true)

@@ -22,6 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -58,7 +59,7 @@ class CameraFragment : Fragment() {
                 }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.inputOptions
+            viewModel.controller.inputFile
                 .collect {
                     if (it != null) {
                         startRecording(it)
@@ -95,11 +96,12 @@ class CameraFragment : Fragment() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun startRecording(options: FileOutputOptions) {
+    private fun startRecording(file: File) {
         val context = requireContext()
         stopRecording()
         recording = videoCapture.output
-            .prepareRecording(context, options)
+            .prepareRecording(context, FileOutputOptions.Builder(file)
+                .build())
             .apply {
                 if (context.isGranted(Manifest.permission.RECORD_AUDIO)) {
                     withAudioEnabled()
