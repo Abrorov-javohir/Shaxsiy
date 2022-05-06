@@ -25,7 +25,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class VideoFragment : Fragment() {
+class CameraFragment : Fragment() {
 
     @Inject
     lateinit var permProvider: PermProvider
