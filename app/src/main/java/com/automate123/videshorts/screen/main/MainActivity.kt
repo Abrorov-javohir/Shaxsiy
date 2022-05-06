@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import com.automate123.videshorts.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import org.jetbrains.anko.indeterminateProgressDialog
 import timber.log.Timber
 import java.io.File
 
@@ -17,6 +18,9 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
+
+    private val waitDialogDelegate = lazy { indeterminateProgressDialog("Идет загрузка...", "Подождите") }
+    private val waitDialog by waitDialogDelegate
 
     private lateinit var binding: ActivityMainBinding
 
@@ -27,6 +31,15 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.controller.currentPosition.collect {
                 binding.tvPosition.text = if (it > 0) it.toString() else null
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.controller.isProcessing.collect {
+                if (it) {
+                    waitDialog.show()
+                } else if (waitDialogDelegate.isInitialized()) {
+                    waitDialog.dismiss()
+                }
             }
         }
         lifecycleScope.launch {
