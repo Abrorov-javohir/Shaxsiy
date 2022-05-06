@@ -9,7 +9,7 @@ import com.automate123.videshorts.service.VideoWorker
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -55,8 +55,16 @@ class VideoTest {
                 val start = System.currentTimeMillis()
                 VideoWorker.launch(applicationContext, DIRNAME)
                     .asFlow()
-                    .first { it.state in finishStates }
-                println("Time: ${System.currentTimeMillis() - start} ms")
+                    .collect {
+                        when (it.state) {
+                            WorkInfo.State.SUCCEEDED -> {
+                                println("Time: ${System.currentTimeMillis() - start} ms")
+                                coroutineContext.job.cancel()
+                            }
+                            WorkInfo.State.FAILED -> throw RuntimeException()
+                            else -> {}
+                        }
+                    }
             }
         }
     }
@@ -68,11 +76,5 @@ class VideoTest {
     companion object {
 
         private const val DIRNAME = "test"
-
-        private val finishStates = arrayOf(
-            WorkInfo.State.SUCCEEDED,
-            WorkInfo.State.FAILED,
-            WorkInfo.State.CANCELLED
-        )
     }
 }

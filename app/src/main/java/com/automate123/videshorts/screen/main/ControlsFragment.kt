@@ -34,7 +34,7 @@ class ControlsFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.recording.collect {
+            viewModel.controller.isRecording.collect {
                 if (it) {
                     binding.fabForward.isEnabled = false
                     binding.ivRetry.isEnabled = true

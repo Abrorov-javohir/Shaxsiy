@@ -19,7 +19,6 @@ import com.automate123.videshorts.databinding.FragmentVideoBinding
 import com.automate123.videshorts.extension.isGranted
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -51,14 +50,15 @@ class VideoFragment : Fragment() {
             permProvider.grantedPerms
                 .filter { it.contains(Manifest.permission.CAMERA) }
                 .collect {
-                    cameraProvider = ProcessCameraProvider.getInstance(requireContext())
-                        .await()
-                    startCamera()
+                    if (!::cameraProvider.isInitialized) {
+                        cameraProvider = ProcessCameraProvider.getInstance(requireContext())
+                            .await()
+                        startCamera()
+                    }
                 }
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.input
-                .distinctUntilChanged()
                 .collect {
                     if (it != null) {
                         startRecording(it)
@@ -88,6 +88,7 @@ class VideoFragment : Fragment() {
                 preview,
                 videoCapture
             )
+            viewModel.controller.isBounded = true
         } catch (e: Throwable) {
             Timber.e(e)
         }
