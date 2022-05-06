@@ -58,7 +58,7 @@ class VideoFragment : Fragment() {
                 }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.input
+            viewModel.controller.inputOptions
                 .collect {
                     if (it != null) {
                         startRecording(it)
@@ -88,7 +88,7 @@ class VideoFragment : Fragment() {
                 preview,
                 videoCapture
             )
-            viewModel.controller.isBounded = true
+            viewModel.controller.isCameraBound = true
         } catch (e: Throwable) {
             Timber.e(e)
         }

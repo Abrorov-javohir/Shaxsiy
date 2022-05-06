@@ -34,13 +34,14 @@ class ControlsFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.isRecording.collect {
+            viewModel.controller.isCapturing.collect {
+                val position = viewModel.controller.position.value
                 if (it) {
                     binding.fabForward.isEnabled = false
                     binding.ivRetry.isEnabled = true
                 } else {
                     binding.fabForward.isEnabled = true
-                    binding.ivRetry.isEnabled = viewModel.controller.position > 0
+                    binding.ivRetry.isEnabled = position > 0
                 }
             }
         }
