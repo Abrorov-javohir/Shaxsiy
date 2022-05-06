@@ -18,6 +18,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -38,6 +39,7 @@ class VideoTest {
     @Before
     fun init() {
         hiltRule.inject()
+        Timber.plant(Timber.DebugTree())
     }
 
     @Test
@@ -76,6 +78,7 @@ class VideoTest {
 
     @After
     fun release() {
+        Timber.uprootAll()
     }
 
     companion object {

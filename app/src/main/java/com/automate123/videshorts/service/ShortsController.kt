@@ -7,6 +7,7 @@ import com.automate123.videshorts.KEY_FILENAME
 import com.automate123.videshorts.MAX_SHORTS
 import com.automate123.videshorts.extension.asFlow
 import com.automate123.videshorts.extension.currentTimeInSeconds
+import com.automate123.videshorts.extension.rootDir
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.*
@@ -20,8 +21,7 @@ import javax.inject.Inject
 
 @ViewModelScoped
 class ShortsController @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val rootDir: File
+    @ApplicationContext private val context: Context
 ) : CoroutineScope {
 
     @Volatile
@@ -55,12 +55,11 @@ class ShortsController @Inject constructor(
 
     private var processJob: Job? = null
 
-    override val coroutineContext = Dispatchers.Main + parentJob + CoroutineExceptionHandler { _, e ->
-        Timber.e(e)
-    }
-
     private val workDir: File
-        get() = File(rootDir, startTime.toString())
+        get() = File(context.rootDir, startTime.toString())
+
+    private val recordFile: File
+        get() = File(workDir, "$position.mp4")
 
     fun recordNext() {
         if (!isCameraBound) {
@@ -75,7 +74,7 @@ class ShortsController @Inject constructor(
         if (position == 1) {
             startTime = currentTimeInSeconds()
         }
-        _inputFile.tryEmit(File(workDir, "$position.mp4"))
+        _inputFile.tryEmit(recordFile)
     }
 
     fun recordAgain() {
@@ -83,7 +82,7 @@ class ShortsController @Inject constructor(
             return
         }
         parentJob.cancelChildren()
-        _inputFile.tryEmit(File(workDir, "$position.mp4"))
+        _inputFile.tryEmit(recordFile)
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
@@ -109,7 +108,6 @@ class ShortsController @Inject constructor(
                                         _outputFile.emit(File(workDir, filename))
                                         processJob?.cancel()
                                     }
-                                    WorkInfo.State.CANCELLED -> throw CancellationException()
                                     WorkInfo.State.FAILED -> throw RuntimeException()
                                     else -> {}
                                 }
@@ -123,5 +121,9 @@ class ShortsController @Inject constructor(
             }
             else -> {}
         }
+    }
+
+    override val coroutineContext = Dispatchers.Main + parentJob + CoroutineExceptionHandler { _, e ->
+        Timber.e(e)
     }
 }
