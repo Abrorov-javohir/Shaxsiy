@@ -35,7 +35,7 @@ class ControlsFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.isCapturing.collect {
-                val position = viewModel.controller.position.value
+                val position = viewModel.controller.currentPosition.value
                 if (it) {
                     binding.fabForward.isEnabled = false
                     binding.ivRetry.isEnabled = true

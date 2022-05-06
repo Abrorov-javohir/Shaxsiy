@@ -25,21 +25,22 @@ class RecordController @Inject constructor(
     @Volatile
     var isCameraBound = false
 
-    private val _isCapturing = MutableStateFlow(false)
-    val isCapturing: StateFlow<Boolean>
-        get() = _isCapturing.asStateFlow()
+    private val _isBusy = MutableStateFlow(false)
+    val isCapturing = _isBusy.asStateFlow()
 
-    private val _position = MutableStateFlow(0)
-    val position: StateFlow<Int>
-        get() = _position.asStateFlow()
+    private val _currentPosition = MutableStateFlow(0)
+    val currentPosition = _currentPosition.asStateFlow()
+    private var position = 0
+        set(value) {
+            field = value
+            _currentPosition.tryEmit(value)
+        }
 
     private val _inputOptions = MutableSharedFlow<FileOutputOptions?>()
-    val inputOptions: SharedFlow<FileOutputOptions?>
-        get() = _inputOptions.asSharedFlow()
+    val inputOptions = _inputOptions.asSharedFlow()
 
     private val _outputFile = MutableSharedFlow<File>()
-    val outputFile: SharedFlow<File>
-        get() = _outputFile.asSharedFlow()
+    val outputFile = _outputFile.asSharedFlow()
 
     private var startTime = Instant.now().epochSecond
 
@@ -53,6 +54,9 @@ class RecordController @Inject constructor(
         Timber.e(e)
     }
 
+    private val workDir: File
+        get() = File(rootDir, startTime.toString())
+
     fun recordNext() {
         if (!isCameraBound) {
             return
@@ -60,7 +64,7 @@ class RecordController @Inject constructor(
         captureJob?.cancel()
 
         position++
-        _inputOptions.tryEmit(fileManager.getOutputOptions(_position))
+        _inputOptions.tryEmit(getOutputOptions())
     }
 
     fun recordAgain() {
@@ -68,21 +72,20 @@ class RecordController @Inject constructor(
             return
         }
         captureJob?.cancel()
-        _inputOptions.tryEmit(FileOutputOptions.Builder(File(workDir, "$position.mp4"))
-            .build())
+        _inputOptions.tryEmit(getOutputOptions())
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
         when (event) {
             is VideoRecordEvent.Start -> {
                 captureJob = launch {
-                    _isCapturing.emit(true)
+                    _isBusy.emit(true)
                     delay(2000L)
                     _inputOptions.emit(null)
                 }
             }
             is VideoRecordEvent.Finalize -> {
-                _isCapturing.tryEmit(false)
+                _isBusy.tryEmit(false)
                 if (position >= MAX_SHORTS) {
                     processJob = launch {
                         val workDir = File(rootDir, startTime.toString())
@@ -102,5 +105,11 @@ class RecordController @Inject constructor(
             }
             else -> {}
         }
+    }
+
+    private fun getOutputOptions(): FileOutputOptions {
+        return FileOutputOptions
+            .Builder(File(workDir, "$position.mp4"))
+            .build()
     }
 }
