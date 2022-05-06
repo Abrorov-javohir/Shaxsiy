@@ -25,7 +25,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         lifecycleScope.launch {
-            viewModel.controller.output.collect {
+            viewModel.controller.currentPosition.collect {
+                binding.tvPosition.text = if (it > 0) it.toString() else null
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.controller.outputFile.collect {
                 shareResult(it)
             }
         }

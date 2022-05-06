@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.automate123.videshorts.databinding.FragmentControlsBinding
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class ControlsFragment : Fragment() {
@@ -34,9 +35,14 @@ class ControlsFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.isCapturing.collect {
+            combine(
+                viewModel.controller.isCapturing,
+                viewModel.controller.isProcessing
+            ) { isCapturing, isProcessing ->
+                isCapturing || isProcessing
+            }.collect { isBusy ->
                 val position = viewModel.controller.currentPosition.value
-                if (it) {
+                if (isBusy) {
                     binding.fabForward.isEnabled = false
                     binding.ivRetry.isEnabled = true
                 } else {
