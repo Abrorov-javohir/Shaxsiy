@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.automate123.videshorts.databinding.FragmentControlsBinding
-import com.automate123.videshorts.model.RecordState
 import kotlinx.coroutines.launch
 
 class ControlsFragment : Fragment() {
@@ -35,20 +34,13 @@ class ControlsFragment : Fragment() {
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.state.collect {
-                when (it) {
-                    RecordState.FREE -> {
-                        binding.fabForward.isEnabled = true
-                        binding.ivRetry.isEnabled = viewModel.controller.position > 0
-                    }
-                    RecordState.BUSY -> {
-                        binding.fabForward.isEnabled = false
-                        binding.ivRetry.isEnabled = true
-                    }
-                    else -> {
-                        binding.fabForward.isEnabled = false
-                        binding.ivRetry.isEnabled = false
-                    }
+            viewModel.controller.recording.collect {
+                if (it) {
+                    binding.fabForward.isEnabled = false
+                    binding.ivRetry.isEnabled = true
+                } else {
+                    binding.fabForward.isEnabled = true
+                    binding.ivRetry.isEnabled = viewModel.controller.position > 0
                 }
             }
         }

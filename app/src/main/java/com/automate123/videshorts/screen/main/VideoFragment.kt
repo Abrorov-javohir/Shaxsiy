@@ -19,6 +19,7 @@ import com.automate123.videshorts.databinding.FragmentVideoBinding
 import com.automate123.videshorts.extension.isGranted
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -57,6 +58,7 @@ class VideoFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.input
+                .distinctUntilChanged()
                 .collect {
                     if (it != null) {
                         startRecording(it)
