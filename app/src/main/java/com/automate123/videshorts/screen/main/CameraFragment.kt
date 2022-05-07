@@ -64,6 +64,7 @@ class CameraFragment : Fragment() {
                     if (it != null) {
                         startRecording(it)
                     } else {
+                        viewModel.preview.tryEmit(binding.preview.bitmap)
                         stopRecording()
                     }
                 }

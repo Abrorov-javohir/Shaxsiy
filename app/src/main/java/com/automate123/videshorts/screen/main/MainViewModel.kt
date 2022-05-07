@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import com.automate123.videshorts.service.ShortsController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
 
@@ -12,5 +13,5 @@ class MainViewModel @Inject constructor(
     val controller: ShortsController
 ) : ViewModel() {
 
-    val preview = MutableSharedFlow<Bitmap?>()
+    val preview = MutableSharedFlow<Bitmap?>(0, 1, DROP_OLDEST)
 }

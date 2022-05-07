@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.automate123.videshorts.extension.isGranted
 import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.scopes.ActivityScoped
+import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -21,7 +22,7 @@ class PermProvider @Inject constructor(
     @ActivityContext private val context: Context
 ) : DefaultLifecycleObserver {
 
-    private val _grantedPerms = MutableSharedFlow<List<String>>(1)
+    private val _grantedPerms = MutableSharedFlow<List<String>>(1, 0, DROP_OLDEST)
     val grantedPerms: SharedFlow<List<String>>
         get() = _grantedPerms.asSharedFlow()
 

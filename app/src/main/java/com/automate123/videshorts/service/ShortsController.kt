@@ -99,30 +99,34 @@ class ShortsController @Inject constructor(
                 _isRecording.tryEmit(false)
                 if (position >= MAX_SHORTS) {
                     position = 0
-                    processJob = launch {
-                        _isProcessing.emit(true)
-                        VideoWorker.launch(context, workDir.name)
-                            .asFlow()
-                            .collect {
-                                when (it.state) {
-                                    WorkInfo.State.SUCCEEDED -> {
-                                        val filename = it.outputData.getString(KEY_FILENAME)!!
-                                        _outputFile.emit(File(workDir, filename))
-                                        processJob?.cancel()
-                                    }
-                                    WorkInfo.State.CANCELLED -> throw CancellationException()
-                                    WorkInfo.State.FAILED -> throw RuntimeException()
-                                    else -> {}
-                                }
-                            }
-                    }
-                    processJob?.invokeOnCompletion {
-                        VideoWorker.cancel(context)
-                        _isProcessing.tryEmit(false)
-                    }
+                    processVideo()
                 }
             }
             else -> {}
+        }
+    }
+
+    private fun processVideo() {
+        processJob = launch {
+            _isProcessing.emit(true)
+            VideoWorker.launch(context, workDir.name)
+                .asFlow()
+                .collect {
+                    when (it.state) {
+                        WorkInfo.State.SUCCEEDED -> {
+                            val filename = it.outputData.getString(KEY_FILENAME)!!
+                            _outputFile.emit(File(workDir, filename))
+                            processJob?.cancel()
+                        }
+                        WorkInfo.State.CANCELLED -> throw CancellationException()
+                        WorkInfo.State.FAILED -> throw RuntimeException()
+                        else -> {}
+                    }
+                }
+        }
+        processJob?.invokeOnCompletion {
+            VideoWorker.cancel(context)
+            _isProcessing.tryEmit(false)
         }
     }
 
