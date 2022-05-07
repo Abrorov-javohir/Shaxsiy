@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
-    private val waitDialogDelegate = lazy { indeterminateProgressDialog("Идет загрузка...", "Подождите") }
+    private val waitDialogDelegate = lazy { indeterminateProgressDialog("Идет обработка...", "Подождите") }
     private val waitDialog by waitDialogDelegate
 
     private lateinit var binding: ActivityMainBinding
