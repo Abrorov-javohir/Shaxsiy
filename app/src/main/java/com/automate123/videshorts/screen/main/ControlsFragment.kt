@@ -27,7 +27,7 @@ class ControlsFragment : Fragment() {
             viewModel.controller.recordNext()
         }
         binding.ivRetry.setOnClickListener {
-            viewModel.controller.recordAgain()
+            viewModel.controller.repeatAgain()
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.preview.collect {
@@ -36,9 +36,10 @@ class ControlsFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             combine(
+                viewModel.controller.currentPosition,
                 viewModel.controller.isRecording,
                 viewModel.controller.isProcessing
-            ) { isRecording, isProcessing ->
+            ) { _, isRecording, isProcessing ->
                 isRecording || isProcessing
             }.collect { isBusy ->
                 val position = viewModel.controller.currentPosition.value

@@ -7,10 +7,10 @@ import com.automate123.videshorts.KEY_FILENAME
 import com.automate123.videshorts.MAX_SHORTS
 import com.automate123.videshorts.extension.asFlow
 import com.automate123.videshorts.extension.currentTimeInSeconds
-import com.automate123.videshorts.extension.rootDir
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -21,7 +21,8 @@ import javax.inject.Inject
 
 @ViewModelScoped
 class ShortsController @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val rootDir: File
 ) : CoroutineScope {
 
     @Volatile
@@ -41,10 +42,10 @@ class ShortsController @Inject constructor(
     private val _currentPosition = MutableStateFlow(position)
     val currentPosition = _currentPosition.asStateFlow()
 
-    private val _inputFile = MutableSharedFlow<File?>()
+    private val _inputFile = MutableSharedFlow<File?>(0, 1, DROP_OLDEST)
     val inputFile = _inputFile.asSharedFlow()
 
-    private val _outputFile = MutableSharedFlow<File>()
+    private val _outputFile = MutableSharedFlow<File>(0, 1, DROP_OLDEST)
     val outputFile = _outputFile.asSharedFlow()
 
     private var startTime = currentTimeInSeconds()
@@ -56,7 +57,7 @@ class ShortsController @Inject constructor(
     private var processJob: Job? = null
 
     private val workDir: File
-        get() = File(context.rootDir, startTime.toString())
+        get() = File(rootDir, startTime.toString())
 
     private val recordFile: File
         get() = File(workDir, "$position.mp4")
@@ -77,7 +78,7 @@ class ShortsController @Inject constructor(
         _inputFile.tryEmit(recordFile)
     }
 
-    fun recordAgain() {
+    fun repeatAgain() {
         if (!isCameraBound) {
             return
         }
@@ -97,6 +98,7 @@ class ShortsController @Inject constructor(
             is VideoRecordEvent.Finalize -> {
                 _isRecording.tryEmit(false)
                 if (position >= MAX_SHORTS) {
+                    position = 0
                     processJob = launch {
                         _isProcessing.emit(true)
                         VideoWorker.launch(context, workDir.name)
@@ -108,6 +110,7 @@ class ShortsController @Inject constructor(
                                         _outputFile.emit(File(workDir, filename))
                                         processJob?.cancel()
                                     }
+                                    WorkInfo.State.CANCELLED -> throw CancellationException()
                                     WorkInfo.State.FAILED -> throw RuntimeException()
                                     else -> {}
                                 }
