@@ -43,6 +43,9 @@ class ControlsFragment : Fragment() {
                 isRecording || isProcessing
             }.collect { isBusy ->
                 val position = viewModel.controller.currentPosition.value
+                if (position <= 0) {
+                    binding.ivThumb.setImageResource(0)
+                }
                 if (isBusy) {
                     binding.fabForward.isEnabled = false
                     binding.ivRetry.isEnabled = true
