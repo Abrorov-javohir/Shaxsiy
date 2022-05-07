@@ -61,4 +61,11 @@ class MainActivity : AppCompatActivity() {
             Timber.e(e)
         }
     }
+
+    override fun onDestroy() {
+        if (waitDialogDelegate.isInitialized()) {
+            waitDialog.dismiss()
+        }
+        super.onDestroy()
+    }
 }
