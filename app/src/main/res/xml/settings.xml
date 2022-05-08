@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><!--suppress AndroidDomInspection -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:defaultValue="2"
+        android:entries="@array/duration"
+        android:entryValues="@array/duration"
+        android:key="duration"
+        android:summary="В секундах"
+        android:title="Длина отрывка" />
+
+</androidx.preference.PreferenceScreen>
