@@ -1,11 +1,11 @@
 package com.automate123.videshorts.screen.settings
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import com.automate123.videshorts.screen.BaseActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
