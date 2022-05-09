@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 class ThumbAdapter @Inject constructor() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    val items = mutableListOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0)
+    val items = mutableListOf(0, 1, 2, 3, 4, 0)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {

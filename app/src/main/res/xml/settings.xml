@@ -6,7 +6,6 @@
         android:entries="@array/duration"
         android:entryValues="@array/duration"
         android:key="duration"
-        android:summary="В секундах"
         android:title="Длина отрывка" />
 
 </androidx.preference.PreferenceScreen>
