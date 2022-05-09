@@ -63,8 +63,9 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:maxImageSize="56dp"
-                app:tint="@android:color/white"
-                tools:src="@drawable/ic_baseline_pause_24" />
+                app:tint="@color/colorAccent"
+                tools:src="@drawable/ic_baseline_pause_24"
+                tools:tint="@android:color/white" />
 
             <com.automate123.videshorts.view.AlphaImageView
                 android:id="@+id/iv_share"
