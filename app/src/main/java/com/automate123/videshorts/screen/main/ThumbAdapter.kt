@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 class ThumbAdapter @Inject constructor() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    val items = mutableListOf(0, 1, 2, 3, 4, 0)
+    var count = 4
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
@@ -26,15 +26,19 @@ class ThumbAdapter @Inject constructor() : RecyclerView.Adapter<RecyclerView.Vie
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val item = items[position]
         if (holder is ItemHolder) {
-            holder.bindView(item)
+            holder.bindView(position)
         }
     }
 
-    override fun getItemViewType(position: Int) = items[position]
+    override fun getItemViewType(position: Int): Int {
+        if (position > count) {
+            return 0
+        }
+        return position
+    }
 
-    override fun getItemCount() = items.size
+    override fun getItemCount() = 1 + count + 1
 
     class SpaceHolder : RecyclerView.ViewHolder {
 
@@ -46,10 +50,10 @@ class ThumbAdapter @Inject constructor() : RecyclerView.Adapter<RecyclerView.Vie
 
     class ItemHolder(private val binding: ItemThumbBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bindView(item: Int) {
+        fun bindView(position: Int) {
             with(binding.root.context) {
-                binding.ivThumb.load(item.toString()) {
-                    error(resources.getIdentifier("ic_$item", "drawable", packageName))
+                binding.ivThumb.load(position.toString()) {
+                    error(resources.getIdentifier("ic_$position", "drawable", packageName))
                 }
             }
         }

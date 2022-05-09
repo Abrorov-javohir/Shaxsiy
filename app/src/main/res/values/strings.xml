@@ -8,4 +8,12 @@
         <item>10</item>
         <item>12</item>
     </string-array>
+    <plurals name="seconds">
+        <item quantity="zero">%1$d секунд</item>
+        <item quantity="one">%1$d секунда</item>
+        <item quantity="two">%1$d секунды</item>
+        <item quantity="few">%1$d секунды</item>
+        <item quantity="many">%1$d секунд</item>
+        <item quantity="other">%1$d секунд</item>
+    </plurals>
 </resources>
