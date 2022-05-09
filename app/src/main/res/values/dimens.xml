@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="def_hor_margin">16dp</dimen>
+
     <dimen name="controls_min_height">240dp</dimen>
+    <!-- ≈ 0.3 * controls_min_height -->
+    <dimen name="thumb_size">70dp</dimen>
 </resources>
