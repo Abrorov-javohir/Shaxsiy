@@ -7,38 +7,45 @@
     android:background="#80000000"
     tools:layout_height="@dimen/controls_min_height">
 
-    <androidx.core.widget.NestedScrollView
+    <HorizontalScrollView
         android:id="@+id/sv_thumbs"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/cv_controls"
-        app:layout_constraintHeight_percent="0.5"
+        app:layout_constraintHeight_percent="0.3"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
 
             <Space
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:id="@+id/s_start"
+                android:layout_width="16dp"
+                android:layout_height="match_parent"
+                app:layout_constraintStart_toStartOf="parent" />
 
             <androidx.recyclerview.widget.RecyclerView
-                android:layout_width="match_parent"
+                android:id="@+id/rv_thumbs"
+                android:layout_width="wrap_content"
                 android:layout_height="72dp"
                 android:orientation="horizontal"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/s_start"
+                app:layout_constraintTop_toTopOf="parent"
                 tools:itemCount="4"
                 tools:listitem="@layout/item_thumb" />
 
             <Space
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:id="@+id/s_end"
+                android:layout_width="16dp"
+                android:layout_height="match_parent"
+                app:layout_constraintStart_toEndOf="@+id/rv_thumbs" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </androidx.core.widget.NestedScrollView>
+    </HorizontalScrollView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cv_controls"
@@ -57,23 +64,25 @@
 
             <com.automate123.videshorts.view.AlphaImageView
                 android:id="@+id/iv_retry"
-                android:layout_width="68dp"
-                android:layout_height="68dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:adjustViewBounds="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:rotation="45"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_baseline_refresh_24"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/fab_forward"
+                app:layout_constraintEnd_toStartOf="@+id/fab"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:enabled="false" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab_forward"
+                android:id="@+id/fab"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
+                android:scaleType="center"
                 app:backgroundTint="@color/colorAccent"
                 app:elevation="0dp"
                 app:fabCustomSize="90dp"
@@ -88,13 +97,15 @@
 
             <com.automate123.videshorts.view.AlphaImageView
                 android:id="@+id/iv_share"
-                android:layout_width="68dp"
-                android:layout_height="68dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:adjustViewBounds="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_baseline_share_24"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/fab_forward"
+                app:layout_constraintStart_toEndOf="@+id/fab"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:enabled="false" />
 
