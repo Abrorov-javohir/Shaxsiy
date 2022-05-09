@@ -44,7 +44,7 @@ class ThumbAdapter @Inject constructor() : RecyclerView.Adapter<RecyclerView.Vie
 
         @Suppress("ConvertSecondaryConstructorToPrimary")
         constructor(context: Context): super(Space(context).apply {
-            layoutParams = ViewGroup.LayoutParams(dip(16), 0)
+            layoutParams = ViewGroup.LayoutParams(dip(12), 0)
         })
     }
 

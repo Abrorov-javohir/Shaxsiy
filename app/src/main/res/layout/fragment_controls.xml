@@ -17,14 +17,14 @@
         app:layout_constraintHeight_percent="0.3"
         app:layout_constraintTop_toTopOf="parent"
         tools:itemCount="4"
-        tools:layout_marginStart="16dp"
+        tools:layout_marginStart="12dp"
         tools:listitem="@layout/item_thumb" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cv_controls"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="@dimen/def_hor_margin"
+        android:layout_marginHorizontal="16dp"
         app:cardCornerRadius="30dp"
         app:layout_constraintBottom_toTopOf="@+id/s_bottom"
         app:layout_constraintHeight_percent="0.5">
@@ -36,8 +36,8 @@
 
             <com.automate123.videshorts.view.AlphaImageView
                 android:id="@+id/iv_retry"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="62dp"
+                android:layout_height="62dp"
                 android:adjustViewBounds="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:rotation="45"
@@ -57,7 +57,7 @@
                 android:scaleType="center"
                 app:backgroundTint="@color/colorAccent"
                 app:elevation="0dp"
-                app:fabCustomSize="90dp"
+                app:fabCustomSize="@dimen/fab_size"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -68,8 +68,8 @@
 
             <com.automate123.videshorts.view.AlphaImageView
                 android:id="@+id/iv_share"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:adjustViewBounds="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:scaleType="fitCenter"
