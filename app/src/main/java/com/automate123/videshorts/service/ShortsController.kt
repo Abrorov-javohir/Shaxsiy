@@ -26,24 +26,24 @@ class ShortsController @Inject constructor(
     private val _isRecording = MutableStateFlow(false)
     val isRecording = _isRecording.asStateFlow()
 
-    private var count = 0
-        set(value) {
-            field = value
-            _recordsCount.tryEmit(value)
-        }
-    private val _recordsCount = MutableStateFlow(count)
-    val recordsCount = _recordsCount.asStateFlow()
-
     private var position = 0
         set(value) {
             field = value
-            _recordPosition.tryEmit(value)
+            _recordPosition.value = value
         }
     private val _recordPosition = MutableStateFlow(position)
     val recordPosition = _recordPosition.asStateFlow()
 
     private val _recordFile = MutableSharedFlow<File?>(0, 1, DROP_OLDEST)
     val recordFile = _recordFile.asSharedFlow()
+
+    private var count = 0
+        set(value) {
+            field = value
+            _recordsCount.value = value
+        }
+    private val _recordsCount = MutableStateFlow(count)
+    val recordsCount = _recordsCount.asStateFlow()
 
     private val _countdown = MutableSharedFlow<Int>(0, 1, DROP_OLDEST)
     val countdown = _countdown.asSharedFlow()
@@ -60,8 +60,9 @@ class ShortsController @Inject constructor(
     fun startRecord() {
         if (isCameraBound) {
             recordJob?.cancel()
+            count++
             position++
-            if (position == 1) {
+            if (count == 1) {
                 startTime = currentTimeInSeconds()
             }
             _recordFile.tryEmit(File(workDir, "$position.mp4"))
@@ -76,7 +77,12 @@ class ShortsController @Inject constructor(
 
     fun cancelRecord() {
         if (isCameraBound) {
+            val wasRecording = isRecording.value
             recordJob?.cancel()
+            if (!wasRecording) {
+                position--
+                count--
+            }
         }
     }
 
@@ -84,13 +90,14 @@ class ShortsController @Inject constructor(
         if (isCameraBound) {
             recordJob?.cancel()
             position = 0
+            count = 0
         }
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
         when (event) {
             is VideoRecordEvent.Start -> {
-                _isRecording.tryEmit(true)
+                _isRecording.value = true
                 recordJob = launch {
                     val seconds = preferences.duration.toInt()
                     (seconds downTo 1).forEach {
@@ -103,7 +110,7 @@ class ShortsController @Inject constructor(
                 }
             }
             is VideoRecordEvent.Finalize -> {
-                _isRecording.tryEmit(false)
+                _isRecording.value = false
                 recordJob?.cancel()
             }
             else -> {}
