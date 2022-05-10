@@ -45,6 +45,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:shapeAppearanceOverlay="@style/RoundedImageView"
+                app:strokeColor="#50ffffff"
+                app:strokeWidth="1dp"
                 tools:src="@mipmap/ic_launcher" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton

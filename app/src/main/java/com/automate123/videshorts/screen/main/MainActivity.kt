@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         countdown = AnimatorInflater.loadAnimator(applicationContext, R.animator.countdown)
         countdown.setTarget(binding.tvTime)
         binding.ivSettings.setOnClickListener {
+            viewModel.controller.stopRecord()
             startActivity<SettingsActivity>()
         }
         lifecycleScope.launch {
