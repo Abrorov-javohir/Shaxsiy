@@ -11,7 +11,6 @@ import androidx.core.graphics.drawable.toDrawable
 import coil.ImageLoader
 import coil.fetch.SourceResult
 import coil.request.Options
-import coil.request.videoFrameMicros
 import coil.request.videoFrameOption
 import coil.size.Dimension.Pixels
 import coil.size.Size
@@ -21,7 +20,7 @@ import kotlin.math.roundToInt
 /**
  * A [Decoder] that uses [MediaMetadataRetriever] to fetch and decode a frame from a video.
  */
-class VideoFrameDecoder(
+class VideoLastFrameDecoder(
     private val source: ImageSource,
     private val options: Options
 ) : Decoder {
@@ -29,7 +28,7 @@ class VideoFrameDecoder(
     override suspend fun decode() = MediaMetadataRetriever().use { retriever ->
         retriever.setDataSource(source)
         val option = options.parameters.videoFrameOption() ?: OPTION_CLOSEST_SYNC
-        val frameMicros = options.parameters.videoFrameMicros() ?: 0L
+        val frameMicros = 1000 * (retriever.extractMetadata(METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L)
 
         // Resolve the dimensions to decode the video frame at accounting
         // for the source's aspect ratio and the target's size.
@@ -176,7 +175,7 @@ class VideoFrameDecoder(
 
         override fun create(result: SourceResult, options: Options, imageLoader: ImageLoader): Decoder? {
             if (!isApplicable(result.mimeType)) return null
-            return VideoFrameDecoder(result.source, options)
+            return VideoLastFrameDecoder(result.source, options)
         }
 
         private fun isApplicable(mimeType: String?): Boolean {

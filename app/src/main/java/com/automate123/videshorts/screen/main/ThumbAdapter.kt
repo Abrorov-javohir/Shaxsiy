@@ -6,7 +6,6 @@ import android.widget.Space
 import androidx.recyclerview.widget.RecyclerView
 import coil.dispose
 import coil.load
-import coil.request.videoFrameMillis
 import com.automate123.videshorts.databinding.ItemThumbBinding
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.jetbrains.anko.dip
@@ -92,7 +91,6 @@ class ThumbAdapter @Inject constructor(
         fun bind(position: Int) {
             with(binding.root.context) {
                 binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4")) {
-                    videoFrameMillis(0)
                     error(resources.getIdentifier("ic_$position", "drawable", packageName))
                 }
             }
