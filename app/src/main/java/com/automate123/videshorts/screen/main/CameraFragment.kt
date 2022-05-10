@@ -15,7 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.work.await
-import com.automate123.videshorts.databinding.FragmentVideoBinding
+import com.automate123.videshorts.databinding.FragmentCameraBinding
 import com.automate123.videshorts.extension.isGranted
 import com.automate123.videshorts.service.PermProvider
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,7 +33,7 @@ class CameraFragment : Fragment() {
 
     private val viewModel: MainViewModel by activityViewModels()
 
-    private lateinit var binding: FragmentVideoBinding
+    private lateinit var binding: FragmentCameraBinding
 
     private lateinit var cameraProvider: ProcessCameraProvider
 
@@ -42,7 +42,7 @@ class CameraFragment : Fragment() {
     private var recording: Recording? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, state: Bundle?): View {
-        binding = FragmentVideoBinding.inflate(inflater, container, false)
+        binding = FragmentCameraBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -59,12 +59,11 @@ class CameraFragment : Fragment() {
                 }
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.inputFile
+            viewModel.controller.recordFile
                 .collect {
                     if (it != null) {
                         startRecording(it)
                     } else {
-                        viewModel.preview.tryEmit(binding.preview.bitmap)
                         stopRecording()
                     }
                 }
