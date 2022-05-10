@@ -10,7 +10,8 @@
         android:id="@+id/f_preview"
         android:name="com.automate123.videshorts.screen.main.CameraFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        tools:layout="@layout/fragment_camera" />
 
     <ImageView
         android:id="@+id/iv_settings"
@@ -45,6 +46,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHeight_min="@dimen/controls_min_height"
         app:layout_constraintHeight_percent="0.3"
-        tools:foreground="#80000000" />
+        tools:foreground="#80000000"
+        tools:layout="@layout/fragment_controls" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
