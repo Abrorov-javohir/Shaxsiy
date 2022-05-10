@@ -7,11 +7,25 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import com.automate123.videshorts.KEY_DIRNAME
+import com.automate123.videshorts.KEY_POSITION
 import com.automate123.videshorts.databinding.FragmentControlsBinding
-import kotlinx.coroutines.flow.combine
+import com.automate123.videshorts.screen.preview.PreviewActivity
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import org.jetbrains.anko.startActivity
+import java.io.File
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ControlsFragment : Fragment() {
+
+    @Inject
+    lateinit var adapter: ThumbAdapter
+
+    @Inject
+    lateinit var rootDir: File
 
     private val viewModel: MainViewModel by activityViewModels()
 
@@ -23,34 +37,46 @@ class ControlsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.fabForward.setOnClickListener {
-            viewModel.controller.recordNext()
+        binding.rvThumbs.adapter = adapter
+        binding.ivThumb.setOnClickListener {
+            val context = requireContext()
+            val dirname = viewModel.controller.dirname
+            val position = viewModel.controller.recordPosition.value
+            context.startActivity<PreviewActivity>(
+                KEY_DIRNAME to dirname,
+                KEY_POSITION to position
+            )
+        }
+        binding.fab.setOnClickListener {
+            viewModel.controller.toggleRecord()
         }
         binding.ivRetry.setOnClickListener {
-            viewModel.controller.repeatAgain()
+            viewModel.controller.cancelRecord()
+        }
+        binding.ivRetry.setOnLongClickListener {
+            viewModel.controller.clearRecords()
+            true
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.preview.collect {
-                binding.ivThumb.setImageBitmap(it)
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            combine(
-                viewModel.controller.currentPosition,
-                viewModel.controller.isRecording,
-                viewModel.controller.isProcessing
-            ) { _, isRecording, isProcessing ->
-                isRecording || isProcessing
-            }.collect { isBusy ->
-                val position = viewModel.controller.currentPosition.value
-                if (position <= 0) {
-                    binding.ivThumb.setImageResource(0)
+            viewModel.controller.recordPosition
+                .filter { it == 0 }
+                .collect {
+                    binding.ivThumb.isEnabled = false
+                    binding.ivThumb.setImageDrawable(null)
                 }
-                if (isBusy) {
-                    binding.fabForward.isEnabled = false
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.controller.isRecording.collect { isRecording ->
+                val position = viewModel.controller.recordPosition.value
+                if (isRecording) {
+                    binding.fab.isEnabled = false
                     binding.ivRetry.isEnabled = true
                 } else {
-                    binding.fabForward.isEnabled = true
+                    adapter.dirname = count
+                    adapter.count = count
+                    adapter.notifyDataSetChanged()
+                    binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4"))
+                    binding.fab.isEnabled = true
                     binding.ivRetry.isEnabled = position > 0
                 }
             }
