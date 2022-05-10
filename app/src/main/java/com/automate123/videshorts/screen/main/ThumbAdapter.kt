@@ -20,28 +20,24 @@ class ThumbAdapter @Inject constructor(
     private val rootDir: File
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    var dirname: String? = null
+    var mDirname: String? = null
 
-    var count = 0
-        set(value) {
-            field = max(minCount, value)
-        }
+    var mPosition = 0
 
-    private var minCount = 0
-        set(value) {
-            field = value
-            count = value
-        }
+    private var iconsCount = 0
+
+    private val itemsCount: Int
+        get() = max(mPosition, iconsCount)
 
     init {
         with(context) {
             while (true) {
-                val position = minCount + 1
+                val position = iconsCount + 1
                 val id = resources.getIdentifier("ic_$position", "drawable", packageName)
                 if (id == 0) {
                     break
                 }
-                minCount++
+                iconsCount = position
             }
         }
     }
@@ -70,13 +66,13 @@ class ThumbAdapter @Inject constructor(
     }
 
     override fun getItemViewType(position: Int): Int {
-        if (position > count) {
+        if (position > itemsCount) {
             return 0
         }
         return position
     }
 
-    override fun getItemCount() = 1 + count + 1
+    override fun getItemCount() = 1 + itemsCount + 1
 
     class SpaceHolder : RecyclerView.ViewHolder {
 
@@ -90,8 +86,13 @@ class ThumbAdapter @Inject constructor(
 
         fun bind(position: Int) {
             with(binding.root.context) {
-                binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4")) {
-                    error(resources.getIdentifier("ic_$position", "drawable", packageName))
+                val iconId = resources.getIdentifier("ic_$position", "drawable", packageName)
+                if (position <= mPosition) {
+                    binding.ivThumb.load(File(rootDir, "$mDirname/$position.mp4")) {
+                        error(iconId)
+                    }
+                } else {
+                    binding.ivThumb.load(iconId)
                 }
             }
         }

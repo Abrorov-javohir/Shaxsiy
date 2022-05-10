@@ -68,8 +68,8 @@
 
             <com.automate123.videshorts.view.AlphaImageView
                 android:id="@+id/iv_retry"
-                android:layout_width="62dp"
-                android:layout_height="62dp"
+                android:layout_width="68dp"
+                android:layout_height="68dp"
                 android:adjustViewBounds="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:rotation="45"
