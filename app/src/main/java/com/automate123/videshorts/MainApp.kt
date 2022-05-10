@@ -7,7 +7,6 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -35,12 +34,6 @@ class MainApp : Application(), CameraXConfig.Provider, ImageLoaderFactory, Confi
 
     override fun newImageLoader(): ImageLoader {
         return ImageLoader.Builder(applicationContext)
-            .allowRgb565(true)
-            .memoryCache {
-                MemoryCache.Builder(applicationContext)
-                    .maxSizePercent(0.3)
-                    .build()
-            }
             .diskCachePolicy(CachePolicy.DISABLED)
             .build()
     }

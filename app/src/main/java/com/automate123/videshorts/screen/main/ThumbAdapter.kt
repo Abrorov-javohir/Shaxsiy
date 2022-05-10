@@ -37,7 +37,7 @@ class ThumbAdapter @Inject constructor(
             while (true) {
                 val position = minCount + 1
                 val id = resources.getIdentifier("ic_$position", "drawable", packageName)
-                if (id <= 0) {
+                if (id == 0) {
                     break
                 }
                 minCount++
