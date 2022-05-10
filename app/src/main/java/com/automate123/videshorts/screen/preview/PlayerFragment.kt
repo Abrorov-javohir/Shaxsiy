@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -24,7 +23,7 @@ class PlayerFragment : Fragment() {
 
     private val viewModel: PreviewViewModel by activityViewModels()
 
-    private lateinit var player: ExoPlayer
+    private lateinit var exoPlayer: ExoPlayer
 
     private lateinit var binding: FragmentPlayerBinding
 
@@ -48,9 +47,13 @@ class PlayerFragment : Fragment() {
     @SuppressLint("UnsafeOptInUsageError")
     private fun initPlayer() {
         val context = requireContext()
-        player = ExoPlayer.Builder(context)
+        exoPlayer = ExoPlayer.Builder(context)
             .build()
-        binding.video.player = player
+        binding.video.apply {
+            player = exoPlayer
+            controllerAutoShow = false
+            controllerShowTimeoutMs = 2000
+        }
     }
 
     private fun preparePlay(file: File) {
@@ -58,13 +61,13 @@ class PlayerFragment : Fragment() {
             .setUri(Uri.fromFile(file))
             .setMimeType(MimeTypes.APPLICATION_MP4)
             .build()
-        player.setMediaItem(item)
-        player.playWhenReady = true
-        player.prepare()
+        exoPlayer.setMediaItem(item)
+        exoPlayer.playWhenReady = true
+        exoPlayer.prepare()
     }
 
     private fun releasePlayer() {
-        player.release()
+        exoPlayer.release()
     }
 
     override fun onDestroyView() {
