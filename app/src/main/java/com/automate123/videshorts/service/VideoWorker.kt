@@ -70,13 +70,17 @@ class VideoWorker @AssistedInject constructor(
 
                 withContext(Dispatchers.IO) {
                     val listFile = File(workDir, "$id.txt")
-                    listFile.writeText(videoFiles.joinToString("\n") { "file ${it.qPath}" })
+                    try {
+                        listFile.writeText(videoFiles.joinToString("\n") { "file ${it.qPath}" })
 
-                    sessions.add(FFmpegKit.execute("""
-                        -y -f concat -safe 0 -i ${listFile.qPath} -c copy ${outputFile.qPath}
-                    """.trim()))
-                    if (!ReturnCode.isSuccess(sessions.last().returnCode)) {
-                        throw Throwable(sessions.last().failStackTrace)
+                        sessions.add(FFmpegKit.execute("""
+                            -y -f concat -safe 0 -i ${listFile.qPath} -c copy ${outputFile.qPath}
+                        """.trim()))
+                        if (!ReturnCode.isSuccess(sessions.last().returnCode)) {
+                            throw Throwable(sessions.last().failStackTrace)
+                        }
+                    } finally {
+                        listFile.delete()
                     }
                 }
                 return Result.success(workDataOf(KEY_FILENAME to outputFile.name))

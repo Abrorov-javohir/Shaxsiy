@@ -20,27 +20,8 @@ class ShortsController @Inject constructor(
     private val rootDir: File
 ) : CoroutineScope {
 
-    @Volatile
-    var isCameraBound = false
-
     private val _isRecording = MutableStateFlow(false)
     val isRecording = _isRecording.asStateFlow()
-
-    private var position = 0
-        set(value) {
-            field = value
-            _recordPosition.value = value
-        }
-    private val _recordPosition = MutableStateFlow(position)
-    val recordPosition = _recordPosition.asStateFlow()
-
-    private var count = 0
-        set(value) {
-            field = value
-            _recordsCount.value = value
-        }
-    private val _recordsCount = MutableStateFlow(count)
-    val recordsCount = _recordsCount.asStateFlow()
 
     private var file: File? = null
         set(value) {
@@ -53,14 +34,25 @@ class ShortsController @Inject constructor(
     private val _countdown = MutableSharedFlow<Int>(0, 1, DROP_OLDEST)
     val countdown = _countdown.asSharedFlow()
 
-    private var startTime = 0L
-
     private val parentJob = SupervisorJob()
 
     private var recordJob: Job? = null
 
+    @Volatile
+    var isCameraBound = false
+
+    var position = 0
+        private set
+
+    var count = 0
+        private set
+
+    private var startTime = 0L
+    val dirname: String
+        get() = startTime.toString()
+
     private val workDir: File
-        get() = File(rootDir, startTime.toString())
+        get() = File(rootDir, dirname)
 
     fun toggleRecord() {
         if (!isCameraBound) {
