@@ -1,18 +1,21 @@
 package com.automate123.videshorts.screen.main
 
+import android.annotation.SuppressLint
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.automate123.videshorts.KEY_DIRNAME
 import com.automate123.videshorts.KEY_POSITION
+import com.automate123.videshorts.R
 import com.automate123.videshorts.databinding.FragmentControlsBinding
 import com.automate123.videshorts.screen.preview.PreviewActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.jetbrains.anko.startActivity
 import java.io.File
@@ -40,11 +43,9 @@ class ControlsFragment : Fragment() {
         binding.rvThumbs.adapter = adapter
         binding.ivThumb.setOnClickListener {
             val context = requireContext()
-            val dirname = viewModel.controller.dirname
-            val position = viewModel.controller.recordPosition.value
             context.startActivity<PreviewActivity>(
-                KEY_DIRNAME to dirname,
-                KEY_POSITION to position
+                KEY_DIRNAME to viewModel.controller.dirname,
+                KEY_POSITION to viewModel.controller.recordPosition.value
             )
         }
         binding.fab.setOnClickListener {
@@ -58,28 +59,48 @@ class ControlsFragment : Fragment() {
             true
         }
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.recordPosition
-                .filter { it == 0 }
-                .collect {
+            viewModel.controller.recordPosition.collect { position ->
+                updateAdapter()
+                if (position <= 0) {
                     binding.ivThumb.isEnabled = false
                     binding.ivThumb.setImageDrawable(null)
                 }
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.preview.collect {
+                binding.ivThumb.isEnabled = true
+                binding.ivThumb.setImageBitmap(it)
+            }
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.isRecording.collect { isRecording ->
                 val position = viewModel.controller.recordPosition.value
                 if (isRecording) {
-                    binding.fab.isEnabled = false
+                    updateFab()
                     binding.ivRetry.isEnabled = true
                 } else {
-                    adapter.dirname = count
-                    adapter.count = count
-                    adapter.notifyDataSetChanged()
-                    binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4"))
-                    binding.fab.isEnabled = true
+                    updateAdapter()
+                    updateFab()
                     binding.ivRetry.isEnabled = position > 0
                 }
             }
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun updateAdapter() {
+        adapter.apply {
+            dirname = viewModel.controller.dirname
+            count = viewModel.controller.recordPosition.value
+            notifyDataSetChanged()
+        }
+    }
+
+    private fun updateFab() {
+        val context = requireContext()
+        val red = ContextCompat.getColor(context, R.color.colorAccent)
+        binding.fab.backgroundTintList = ColorStateList.valueOf(red)
+        binding.fab.setImageResource(R.drawable.ic_baseline_stop_24)
     }
 }
