@@ -94,9 +94,9 @@ class ShortsController @Inject constructor(
         if (!isCameraBound) {
             return
         }
-        val wasRecording = _isRecording.value
+        val hasStarted = file != null
         recordJob?.cancel()
-        if (!wasRecording) {
+        if (!hasStarted) {
             position--
             count--
         }
