@@ -23,7 +23,7 @@ class ShortsController @Inject constructor(
     private val _isRecording = MutableStateFlow(false)
     val isRecording = _isRecording.asStateFlow()
 
-    private var file: File? = null
+    private var inputFile: File? = null
         set(value) {
             field = value
             _recordFile.tryEmit(value)
@@ -44,22 +44,16 @@ class ShortsController @Inject constructor(
     var position = 0
         private set
 
-    var count = 0
-        private set
-
     private var startTime = 0L
     val dirname: String
         get() = startTime.toString()
-
-    private val workDir: File
-        get() = File(rootDir, dirname)
 
     fun toggleRecord() {
         if (!isCameraBound) {
             return
         }
         if (!_isRecording.value) {
-            if (file != null) {
+            if (inputFile != null) {
                 return
             }
             startRecord()
@@ -70,12 +64,11 @@ class ShortsController @Inject constructor(
 
     private fun startRecord() {
         recordJob?.cancel()
-        count++
         position++
-        if (count == 1) {
+        if (position == 1) {
             startTime = currentTimeInSeconds()
         }
-        file = File(workDir, "$position.mp4")
+        inputFile = File(rootDir, "$dirname/$position.mp4")
     }
 
     private fun stopRecord() {
@@ -86,11 +79,10 @@ class ShortsController @Inject constructor(
         if (!isCameraBound) {
             return
         }
-        val hasStarted = file != null
+        val hasStarted = inputFile != null
         recordJob?.cancel()
         if (!hasStarted) {
             position--
-            count--
         }
     }
 
@@ -100,7 +92,6 @@ class ShortsController @Inject constructor(
         }
         recordJob?.cancel()
         position = 0
-        count = 0
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
@@ -115,7 +106,7 @@ class ShortsController @Inject constructor(
                     }
                 }
                 recordJob?.invokeOnCompletion {
-                    file = null
+                    inputFile = null
                 }
             }
             is VideoRecordEvent.Finalize -> {
