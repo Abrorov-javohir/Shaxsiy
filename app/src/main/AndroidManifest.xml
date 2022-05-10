@@ -49,11 +49,13 @@
         </activity>
         <activity
             android:name=".screen.preview.PreviewActivity"
+            android:label="Предпросмотр"
             android:launchMode="singleTask"
             android:parentActivityName=".screen.main.MainActivity"
             android:theme="@style/Theme.DarkActionBar" />
         <activity
             android:name=".screen.settings.SettingsActivity"
+            android:label="Настройки"
             android:launchMode="singleTask"
             android:parentActivityName=".screen.main.MainActivity"
             android:theme="@style/Theme.DarkActionBar" />

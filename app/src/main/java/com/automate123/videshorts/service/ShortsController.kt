@@ -1,13 +1,8 @@
 package com.automate123.videshorts.service
 
-import android.content.Context
 import androidx.camera.video.VideoRecordEvent
-import androidx.work.WorkInfo
-import com.automate123.videshorts.KEY_FILENAME
-import com.automate123.videshorts.MAX_SHORTS
-import com.automate123.videshorts.extension.asFlow
+import com.automate123.videshorts.data.Preferences
 import com.automate123.videshorts.extension.currentTimeInSeconds
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
@@ -21,7 +16,7 @@ import javax.inject.Inject
 
 @ViewModelScoped
 class ShortsController @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val preferences: Preferences,
     private val rootDir: File
 ) : CoroutineScope {
 
@@ -31,59 +26,65 @@ class ShortsController @Inject constructor(
     private val _isRecording = MutableStateFlow(false)
     val isRecording = _isRecording.asStateFlow()
 
-    private val _isProcessing = MutableStateFlow(false)
-    val isProcessing = _isProcessing.asStateFlow()
+    private var count = 0
+        set(value) {
+            field = value
+            _recordsCount.tryEmit(value)
+        }
+    private val _recordsCount = MutableStateFlow(count)
+    val recordsCount = _recordsCount.asStateFlow()
 
     private var position = 0
         set(value) {
             field = value
-            _currentPosition.tryEmit(value)
+            _recordPosition.tryEmit(value)
         }
-    private val _currentPosition = MutableStateFlow(position)
-    val currentPosition = _currentPosition.asStateFlow()
+    private val _recordPosition = MutableStateFlow(position)
+    val recordPosition = _recordPosition.asStateFlow()
 
-    private val _inputFile = MutableSharedFlow<File?>(0, 1, DROP_OLDEST)
-    val inputFile = _inputFile.asSharedFlow()
+    private val _recordFile = MutableSharedFlow<File?>(0, 1, DROP_OLDEST)
+    val recordFile = _recordFile.asSharedFlow()
 
-    private val _outputFile = MutableSharedFlow<File>(0, 1, DROP_OLDEST)
-    val outputFile = _outputFile.asSharedFlow()
+    private val _countdown = MutableSharedFlow<Int>(0, 1, DROP_OLDEST)
+    val countdown = _countdown.asSharedFlow()
 
-    private var startTime = currentTimeInSeconds()
+    private var startTime = 0L
 
     private val parentJob = SupervisorJob()
 
     private var recordJob: Job? = null
 
-    private var processJob: Job? = null
-
     private val workDir: File
         get() = File(rootDir, startTime.toString())
 
-    private val recordFile: File
-        get() = File(workDir, "$position.mp4")
-
-    fun recordNext() {
-        if (!isCameraBound) {
-            return
-        }
-        parentJob.cancelChildren()
-        if (position >= MAX_SHORTS) {
-            position = 1
-        } else {
+    fun startRecord() {
+        if (isCameraBound) {
+            recordJob?.cancel()
             position++
+            if (position == 1) {
+                startTime = currentTimeInSeconds()
+            }
+            _recordFile.tryEmit(File(workDir, "$position.mp4"))
         }
-        if (position == 1) {
-            startTime = currentTimeInSeconds()
-        }
-        _inputFile.tryEmit(recordFile)
     }
 
-    fun repeatAgain() {
-        if (!isCameraBound) {
-            return
+    fun stopRecord() {
+        if (isCameraBound) {
+            recordJob?.cancel()
         }
-        parentJob.cancelChildren()
-        _inputFile.tryEmit(recordFile)
+    }
+
+    fun cancelRecord() {
+        if (isCameraBound) {
+            recordJob?.cancel()
+        }
+    }
+
+    fun clearRecords() {
+        if (isCameraBound) {
+            recordJob?.cancel()
+            position = 0
+        }
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
@@ -91,42 +92,21 @@ class ShortsController @Inject constructor(
             is VideoRecordEvent.Start -> {
                 _isRecording.tryEmit(true)
                 recordJob = launch {
-                    delay(2000L)
-                    _inputFile.emit(null)
+                    val seconds = preferences.duration.toInt()
+                    (seconds downTo 1).forEach {
+                        _countdown.emit(it)
+                        delay(1000)
+                    }
+                }
+                recordJob?.invokeOnCompletion {
+                    _recordFile.tryEmit(null)
                 }
             }
             is VideoRecordEvent.Finalize -> {
                 _isRecording.tryEmit(false)
-                if (position >= MAX_SHORTS) {
-                    position = 0
-                    processVideo()
-                }
+                recordJob?.cancel()
             }
             else -> {}
-        }
-    }
-
-    private fun processVideo() {
-        processJob = launch {
-            _isProcessing.emit(true)
-            VideoWorker.launch(context, workDir.name)
-                .asFlow()
-                .collect {
-                    when (it.state) {
-                        WorkInfo.State.SUCCEEDED -> {
-                            val filename = it.outputData.getString(KEY_FILENAME)!!
-                            _outputFile.emit(File(workDir, filename))
-                            processJob?.cancel()
-                        }
-                        WorkInfo.State.CANCELLED -> throw CancellationException()
-                        WorkInfo.State.FAILED -> throw RuntimeException()
-                        else -> {}
-                    }
-                }
-        }
-        processJob?.invokeOnCompletion {
-            VideoWorker.cancel(context)
-            _isProcessing.tryEmit(false)
         }
     }
 

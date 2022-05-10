@@ -12,7 +12,4 @@ import javax.inject.Inject
 class Preferences @Inject constructor(@ApplicationContext context: Context) : SimpleKrate(context) {
 
     var duration by stringPref("duration").withDefault("2")
-
-    val durationMillis: Long
-        get() = duration.toInt() * 1000L
 }
