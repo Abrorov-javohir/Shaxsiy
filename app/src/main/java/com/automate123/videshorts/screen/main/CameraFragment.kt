@@ -108,6 +108,9 @@ class CameraFragment : Fragment() {
                 }
             }
             .start(ContextCompat.getMainExecutor(context)) {
+                if (it is VideoRecordEvent.Finalize) {
+                    viewModel.preview.tryEmit(binding.preview.bitmap)
+                }
                 viewModel.controller.onRecordEvent(it)
             }
     }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.ViewGroup
 import android.widget.Space
 import androidx.recyclerview.widget.RecyclerView
+import coil.dispose
 import coil.load
 import coil.request.videoFrameMillis
 import com.automate123.videshorts.databinding.ItemThumbBinding
@@ -59,7 +60,13 @@ class ThumbAdapter @Inject constructor(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (holder is ItemHolder) {
-            holder.bindView(position)
+            holder.bind(position)
+        }
+    }
+
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        if (holder is ItemHolder) {
+            holder.unbind()
         }
     }
 
@@ -82,13 +89,17 @@ class ThumbAdapter @Inject constructor(
 
     inner class ItemHolder(private val binding: ItemThumbBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bindView(position: Int) {
+        fun bind(position: Int) {
             with(binding.root.context) {
                 binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4")) {
                     videoFrameMillis(0)
                     error(resources.getIdentifier("ic_$position", "drawable", packageName))
                 }
             }
+        }
+
+        fun unbind() {
+            binding.ivThumb.dispose()
         }
     }
 }

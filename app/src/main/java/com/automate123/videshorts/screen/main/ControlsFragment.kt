@@ -2,6 +2,7 @@ package com.automate123.videshorts.screen.main
 
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -34,6 +35,14 @@ class ControlsFragment : Fragment() {
 
     private lateinit var binding: FragmentControlsBinding
 
+    private var accentColor = 0
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val context = requireContext()
+        accentColor = ContextCompat.getColor(context, R.color.colorAccent)
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, state: Bundle?): View {
         binding = FragmentControlsBinding.inflate(inflater, container, false)
         return binding.root
@@ -65,6 +74,7 @@ class ControlsFragment : Fragment() {
                     binding.ivThumb.isEnabled = false
                     binding.ivThumb.setImageDrawable(null)
                 }
+                binding.ivRetry.isEnabled = position > 0
             }
         }
         viewLifecycleOwner.lifecycleScope.launch {
@@ -75,14 +85,15 @@ class ControlsFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.isRecording.collect { isRecording ->
-                val position = viewModel.controller.recordPosition.value
                 if (isRecording) {
-                    updateFab()
-                    binding.ivRetry.isEnabled = true
+                    binding.fab.backgroundTintList = ColorStateList.valueOf(accentColor)
+                    binding.fab.imageTintList = ColorStateList.valueOf(Color.WHITE)
+                    binding.fab.setImageResource(R.drawable.ic_baseline_stop_24)
                 } else {
                     updateAdapter()
-                    updateFab()
-                    binding.ivRetry.isEnabled = position > 0
+                    binding.fab.backgroundTintList = ColorStateList.valueOf(Color.WHITE)
+                    binding.fab.imageTintList = ColorStateList.valueOf(accentColor)
+                    binding.fab.setImageResource(R.drawable.ic_baseline_circle_24)
                 }
             }
         }
@@ -95,12 +106,5 @@ class ControlsFragment : Fragment() {
             count = viewModel.controller.recordPosition.value
             notifyDataSetChanged()
         }
-    }
-
-    private fun updateFab() {
-        val context = requireContext()
-        val red = ContextCompat.getColor(context, R.color.colorAccent)
-        binding.fab.backgroundTintList = ColorStateList.valueOf(red)
-        binding.fab.setImageResource(R.drawable.ic_baseline_stop_24)
     }
 }

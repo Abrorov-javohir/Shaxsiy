@@ -39,6 +39,7 @@ class MainApp : Application(), CameraXConfig.Provider, ImageLoaderFactory, Confi
                 add(VideoFrameDecoder.Factory())
             }
             .diskCachePolicy(CachePolicy.DISABLED)
+            .crossfade(true)
             .build()
     }
 
