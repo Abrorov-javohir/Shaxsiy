@@ -14,6 +14,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.exoplayer.ExoPlayer
 import com.automate123.videshorts.databinding.FragmentPlayerBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -34,9 +35,11 @@ class PlayerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         initPlayer()
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.videoFile.collect {
-                preparePlay(it)
-            }
+            viewModel.videoFile
+                .filterNotNull()
+                .collect {
+                    preparePlay(it)
+                }
         }
     }
 

@@ -9,6 +9,7 @@ import com.arthenica.ffmpegkit.ReturnCode
 import com.arthenica.ffmpegkit.Session
 import com.automate123.videshorts.KEY_DIRNAME
 import com.automate123.videshorts.KEY_FILENAME
+import com.automate123.videshorts.KEY_POSITION
 import com.automate123.videshorts.extension.qPath
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -29,6 +30,8 @@ class VideoWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         with(applicationContext) {
             val dirname = inputData.getString(KEY_DIRNAME)!!
+            val position = inputData.getInt(KEY_POSITION, 0)
+
             val sessions = mutableListOf<Session>()
             try {
                 val workDir = File(rootDir, dirname)
@@ -39,6 +42,7 @@ class VideoWorker @AssistedInject constructor(
                     videoFiles.addAll(workDir.listFiles()
                         ?.filter { it.name.matches("^[0-9]+\\.mp4$".toRegex()) }
                         ?.sorted()
+                        ?.take(position)
                         .orEmpty())
                     check(videoFiles.isNotEmpty())
 
@@ -97,12 +101,13 @@ class VideoWorker @AssistedInject constructor(
 
     companion object {
 
-        const val NAME = "video"
+        private const val NAME = "video"
 
-        fun launch(context: Context, dirname: String): LiveData<WorkInfo> {
+        fun launch(context: Context, dirname: String, position: Int): LiveData<WorkInfo> {
             val request = OneTimeWorkRequestBuilder<VideoWorker>()
                 .setInputData(Data.Builder()
                     .putString(KEY_DIRNAME, dirname)
+                    .putInt(KEY_POSITION, position)
                     .build())
                 .build()
             with(WorkManager.getInstance(context)) {
