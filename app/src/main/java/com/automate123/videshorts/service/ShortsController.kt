@@ -34,9 +34,6 @@ class ShortsController @Inject constructor(
     private val _recordPosition = MutableStateFlow(position)
     val recordPosition = _recordPosition.asStateFlow()
 
-    private val _recordFile = MutableSharedFlow<File?>(0, 1, DROP_OLDEST)
-    val recordFile = _recordFile.asSharedFlow()
-
     private var count = 0
         set(value) {
             field = value
@@ -44,6 +41,14 @@ class ShortsController @Inject constructor(
         }
     private val _recordsCount = MutableStateFlow(count)
     val recordsCount = _recordsCount.asStateFlow()
+
+    private var file: File? = null
+        set(value) {
+            field = value
+            _recordFile.tryEmit(value)
+        }
+    private val _recordFile = MutableSharedFlow<File?>(0, 1, DROP_OLDEST)
+    val recordFile = _recordFile.asSharedFlow()
 
     private val _countdown = MutableSharedFlow<Int>(0, 1, DROP_OLDEST)
     val countdown = _countdown.asSharedFlow()
@@ -57,41 +62,53 @@ class ShortsController @Inject constructor(
     private val workDir: File
         get() = File(rootDir, startTime.toString())
 
-    fun startRecord() {
-        if (isCameraBound) {
-            recordJob?.cancel()
-            count++
-            position++
-            if (count == 1) {
-                startTime = currentTimeInSeconds()
+    fun toggleRecord() {
+        if (!isCameraBound) {
+            return
+        }
+        if (!_isRecording.value) {
+            if (file != null) {
+                return
             }
-            _recordFile.tryEmit(File(workDir, "$position.mp4"))
+            startRecord()
+        } else {
+            stopRecord()
         }
     }
 
-    fun stopRecord() {
-        if (isCameraBound) {
-            recordJob?.cancel()
+    private fun startRecord() {
+        recordJob?.cancel()
+        count++
+        position++
+        if (count == 1) {
+            startTime = currentTimeInSeconds()
         }
+        _recordFile.tryEmit(File(workDir, "$position.mp4"))
+    }
+
+    private fun stopRecord() {
+        recordJob?.cancel()
     }
 
     fun cancelRecord() {
-        if (isCameraBound) {
-            val wasRecording = isRecording.value
-            recordJob?.cancel()
-            if (!wasRecording) {
-                position--
-                count--
-            }
+        if (!isCameraBound) {
+            return
+        }
+        val wasRecording = _isRecording.value
+        recordJob?.cancel()
+        if (!wasRecording) {
+            position--
+            count--
         }
     }
 
     fun clearRecords() {
-        if (isCameraBound) {
-            recordJob?.cancel()
-            position = 0
-            count = 0
+        if (!isCameraBound) {
+            return
         }
+        recordJob?.cancel()
+        position = 0
+        count = 0
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
