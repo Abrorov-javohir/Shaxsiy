@@ -83,7 +83,7 @@ class ShortsController @Inject constructor(
         if (count == 1) {
             startTime = currentTimeInSeconds()
         }
-        _recordFile.tryEmit(File(workDir, "$position.mp4"))
+        file = File(workDir, "$position.mp4")
     }
 
     private fun stopRecord() {
@@ -123,7 +123,7 @@ class ShortsController @Inject constructor(
                     }
                 }
                 recordJob?.invokeOnCompletion {
-                    _recordFile.tryEmit(null)
+                    file = null
                 }
             }
             is VideoRecordEvent.Finalize -> {
