@@ -7,7 +7,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import coil.decode.VideoFrameDecoder
+import coil.decode.VideoLastFrameDecoder
 import coil.request.CachePolicy
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
@@ -36,10 +36,9 @@ class MainApp : Application(), CameraXConfig.Provider, ImageLoaderFactory, Confi
     override fun newImageLoader(): ImageLoader {
         return ImageLoader.Builder(applicationContext)
             .components {
-                add(VideoFrameDecoder.Factory())
+                add(VideoLastFrameDecoder.Factory())
             }
             .diskCachePolicy(CachePolicy.DISABLED)
-            .crossfade(true)
             .build()
     }
 

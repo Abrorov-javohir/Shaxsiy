@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="controls_min_height">240dp</dimen>
-    <!-- ≈ 0.3 * controls_min_height -->
-    <dimen name="thumb_size">70dp</dimen>
+    <!-- ≈ 0.25 * controls_min_height -->
+    <dimen name="mini_thumb_size">58dp</dimen>
     <!-- ≈ 0.4 * controls_min_height -->
     <dimen name="fab_size">90dp</dimen>
 </resources>

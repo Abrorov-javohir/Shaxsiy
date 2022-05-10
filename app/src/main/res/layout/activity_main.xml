@@ -32,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:textColor="@android:color/white"
-        android:textSize="56sp"
+        android:textSize="64sp"
         app:layout_constraintBottom_toTopOf="@+id/f_controls"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

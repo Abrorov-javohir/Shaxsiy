@@ -14,7 +14,7 @@
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toTopOf="@+id/cv_controls"
-        app:layout_constraintHeight_percent="0.3"
+        app:layout_constraintHeight_percent="0.25"
         app:layout_constraintTop_toTopOf="parent"
         tools:itemCount="4"
         tools:layout_marginStart="12dp"
@@ -36,8 +36,8 @@
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/iv_thumb"
-                android:layout_width="@dimen/thumb_size"
-                android:layout_height="@dimen/thumb_size"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:adjustViewBounds="true"
                 android:scaleType="centerCrop"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -90,6 +90,6 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHeight_percent="0.1" />
+        app:layout_constraintHeight_percent="0.105" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
