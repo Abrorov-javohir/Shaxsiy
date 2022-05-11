@@ -63,7 +63,7 @@ class ShortsController @Inject constructor(
         if (file != null) {
             return
         }
-        recordJob?.cancel()
+        releaseRecord()
         position++
         if (position == 1) {
             startTime = currentTimeInSeconds()
@@ -75,16 +75,16 @@ class ShortsController @Inject constructor(
         if (!isCameraBound) {
             return
         }
-        recordJob?.cancel()
+        releaseRecord()
     }
 
     fun cancelRecord(): Boolean {
         if (!isCameraBound) {
             return false
         }
-        val hasStarted = file != null
-        recordJob?.cancel()
-        if (!hasStarted) {
+        val isActive = file != null || _isRecording.value
+        releaseRecord()
+        if (!isActive) {
             position--
         }
         return true
@@ -94,7 +94,7 @@ class ShortsController @Inject constructor(
         if (!isCameraBound) {
             return false
         }
-        recordJob?.cancel()
+        releaseRecord()
         position = 0
         return true
     }
@@ -111,15 +111,20 @@ class ShortsController @Inject constructor(
                     }
                 }
                 recordJob?.invokeOnCompletion {
-                    file = null
+                    releaseRecord()
                 }
             }
             is VideoRecordEvent.Finalize -> {
                 _isRecording.value = false
-                recordJob?.cancel()
+                releaseRecord()
             }
             else -> {}
         }
+    }
+
+    private fun releaseRecord() {
+        recordJob?.cancel()
+        file = null
     }
 
     override val coroutineContext = Dispatchers.Main + parentJob + CoroutineExceptionHandler { _, e ->
