@@ -58,6 +58,7 @@ class PreviewActivity : BaseActivity() {
                     }
             } catch (e: Throwable) {
                 Timber.e(e)
+                viewModel.videoFile.value = null
             }
         }
     }
