@@ -11,12 +11,14 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import coil.load
 import com.automate123.videshorts.KEY_DIRNAME
 import com.automate123.videshorts.KEY_POSITION
 import com.automate123.videshorts.R
 import com.automate123.videshorts.databinding.FragmentControlsBinding
 import com.automate123.videshorts.screen.preview.PreviewActivity
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.jetbrains.anko.startActivity
 import java.io.File
@@ -54,7 +56,7 @@ class ControlsFragment : Fragment() {
             val context = requireContext()
             context.startActivity<PreviewActivity>(
                 KEY_DIRNAME to viewModel.controller.dirname,
-                KEY_POSITION to viewModel.controller.recordPosition.value
+                KEY_POSITION to viewModel.controller.position
             )
         }
         binding.fab.setOnClickListener {
@@ -67,44 +69,53 @@ class ControlsFragment : Fragment() {
             viewModel.controller.clearRecords()
             true
         }
+        updateFab(false)
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.recordPosition.collect { position ->
-                updateAdapter()
-                if (position <= 0) {
-                    binding.ivThumb.isEnabled = false
-                    binding.ivThumb.setImageDrawable(null)
-                }
-                binding.ivRetry.isEnabled = position > 0
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.preview.collect {
-                binding.ivThumb.isEnabled = true
-                binding.ivThumb.setImageBitmap(it)
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.isRecording.collect { isRecording ->
-                if (isRecording) {
-                    binding.fab.backgroundTintList = ColorStateList.valueOf(accentColor)
-                    binding.fab.imageTintList = ColorStateList.valueOf(Color.WHITE)
-                    binding.fab.setImageResource(R.drawable.ic_baseline_stop_24)
-                } else {
+            viewModel.controller.isRecording
+                .drop(1)
+                .collect { isRecording ->
+                    if (!isRecording) {
+                        updateAdapter()
+                        updateThumb()
+                        updateFab(false)
+                    } else {
+                        updateFab(true)
+                    }
                     updateAdapter()
-                    binding.fab.backgroundTintList = ColorStateList.valueOf(Color.WHITE)
-                    binding.fab.imageTintList = ColorStateList.valueOf(accentColor)
-                    binding.fab.setImageResource(R.drawable.ic_baseline_circle_24)
+                    updateThumb()
+                    binding.ivRetry.isEnabled = position > 0
                 }
-            }
         }
     }
 
     @SuppressLint("NotifyDataSetChanged")
     private fun updateAdapter() {
         adapter.apply {
-            dirname = viewModel.controller.dirname
-            count = viewModel.controller.recordPosition.value
+            mDirname = viewModel.controller.dirname
+            mPosition = viewModel.controller.position
             notifyDataSetChanged()
         }
+    }
+
+    private fun updateThumb() {
+        val dirname = viewModel.controller.dirname
+        val position = viewModel.controller.position
+        binding.ivThumb.isEnabled = position > 0
+        binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4")) {
+            error(null)
+        }
+    }
+
+    private fun updateFab(isActive: Boolean) {
+        binding.fab.apply {
+            backgroundTintList = ColorStateList.valueOf(if (isActive) accentColor else Color.WHITE)
+            imageTintList = ColorStateList.valueOf(if (isActive) Color.WHITE else accentColor)
+            setImageResource(if (isActive) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_circle_24)
+        }
+    }
+
+    private fun updateRetry() {
+        val position = viewModel.controller.position
+        binding.ivRetry.isEnabled = position > 0
     }
 }
