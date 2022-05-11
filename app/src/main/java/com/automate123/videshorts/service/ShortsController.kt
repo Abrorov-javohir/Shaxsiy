@@ -63,7 +63,7 @@ class ShortsController @Inject constructor(
         if (file != null) {
             return
         }
-        releaseRecord()
+        clearRecord()
         position++
         if (position == 1) {
             startTime = currentTimeInSeconds()
@@ -75,28 +75,18 @@ class ShortsController @Inject constructor(
         if (!isCameraBound) {
             return
         }
-        releaseRecord()
+        clearRecord()
     }
 
-    fun cancelRecord(): Boolean {
+    fun cancelRecord() {
         if (!isCameraBound) {
-            return false
+            return
         }
         val isActive = file != null || _isRecording.value
-        releaseRecord()
+        clearRecord()
         if (!isActive) {
             position--
         }
-        return true
-    }
-
-    fun clearRecords(): Boolean {
-        if (!isCameraBound) {
-            return false
-        }
-        releaseRecord()
-        position = 0
-        return true
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
@@ -111,18 +101,18 @@ class ShortsController @Inject constructor(
                     }
                 }
                 recordJob?.invokeOnCompletion {
-                    releaseRecord()
+                    clearRecord()
                 }
             }
             is VideoRecordEvent.Finalize -> {
                 _isRecording.value = false
-                releaseRecord()
+                clearRecord()
             }
             else -> {}
         }
     }
 
-    private fun releaseRecord() {
+    private fun clearRecord() {
         recordJob?.cancel()
         file = null
     }
