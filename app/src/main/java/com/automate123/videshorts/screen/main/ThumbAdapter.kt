@@ -98,9 +98,7 @@ class ThumbAdapter @Inject constructor(
                         error(iconId)
                     }
                 } else {
-                    binding.ivThumb.load(iconId) {
-                        error(null)
-                    }
+                    binding.ivThumb.setImageResource(iconId)
                 }
             }
         }

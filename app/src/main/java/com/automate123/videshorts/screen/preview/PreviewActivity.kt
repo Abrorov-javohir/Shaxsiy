@@ -38,7 +38,7 @@ class PreviewActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityPreviewBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        lifecycleScope.launch {
+        val processJob = lifecycleScope.launch {
             try {
                 val dirname = intent.getStringExtra(KEY_DIRNAME)!!
                 val position = intent.getIntExtra(KEY_POSITION, 0)
@@ -60,6 +60,9 @@ class PreviewActivity : BaseActivity() {
                 Timber.e(e)
                 viewModel.videoFile.value = null
             }
+        }
+        processJob.invokeOnCompletion {
+            VideoWorker.cancel(applicationContext)
         }
     }
 
