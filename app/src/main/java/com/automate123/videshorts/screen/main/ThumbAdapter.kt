@@ -1,12 +1,15 @@
 package com.automate123.videshorts.screen.main
 
 import android.content.Context
+import android.graphics.Color
 import android.view.ViewGroup
 import android.widget.Space
 import androidx.recyclerview.widget.RecyclerView
 import coil.dispose
 import coil.load
 import com.automate123.videshorts.databinding.ItemThumbBinding
+import com.facebook.shimmer.Shimmer
+import com.facebook.shimmer.ShimmerColorDrawable
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.jetbrains.anko.dip
 import org.jetbrains.anko.layoutInflater
@@ -89,6 +92,9 @@ class ThumbAdapter @Inject constructor(
                 val iconId = resources.getIdentifier("ic_$position", "drawable", packageName)
                 if (position <= mPosition) {
                     binding.ivThumb.load(File(rootDir, "$mDirname/$position.mp4")) {
+                        placeholder(ShimmerColorDrawable(Color.WHITE).apply {
+                            setShimmer(Shimmer.ColorHighlightBuilder().build())
+                        })
                         error(iconId)
                     }
                 } else {

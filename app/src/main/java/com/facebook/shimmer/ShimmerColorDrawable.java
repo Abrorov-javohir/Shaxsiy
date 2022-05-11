@@ -25,7 +25,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public final class ColorfulShimmerDrawable extends ColorDrawable {
+public final class ShimmerColorDrawable extends ColorDrawable {
   private final ValueAnimator.AnimatorUpdateListener mUpdateListener =
       new ValueAnimator.AnimatorUpdateListener() {
         @Override
@@ -42,7 +42,7 @@ public final class ColorfulShimmerDrawable extends ColorDrawable {
 
   private @Nullable Shimmer mShimmer;
 
-  public ColorfulShimmerDrawable(@ColorInt int color) {
+  public ShimmerColorDrawable(@ColorInt int color) {
     super(color);
     mShimmerPaint.setAntiAlias(true);
   }

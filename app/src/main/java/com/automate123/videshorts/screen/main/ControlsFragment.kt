@@ -17,6 +17,8 @@ import com.automate123.videshorts.KEY_POSITION
 import com.automate123.videshorts.R
 import com.automate123.videshorts.databinding.FragmentControlsBinding
 import com.automate123.videshorts.screen.preview.PreviewActivity
+import com.facebook.shimmer.Shimmer
+import com.facebook.shimmer.ShimmerColorDrawable
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.jetbrains.anko.startActivity
@@ -105,6 +107,11 @@ class ControlsFragment : Fragment() {
         val position = viewModel.controller.position
         binding.ivThumb.isEnabled = position > 0
         binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4")) {
+            if (position > 0) {
+                placeholder(ShimmerColorDrawable(Color.WHITE).apply {
+                    setShimmer(Shimmer.ColorHighlightBuilder().build())
+                })
+            }
             error(null)
         }
     }
