@@ -19,12 +19,13 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.Shader;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.ColorDrawable;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public final class ShimmerDrawable extends Drawable {
+public final class ColorfulShimmerDrawable extends ColorDrawable {
   private final ValueAnimator.AnimatorUpdateListener mUpdateListener =
       new ValueAnimator.AnimatorUpdateListener() {
         @Override
@@ -41,7 +42,8 @@ public final class ShimmerDrawable extends Drawable {
 
   private @Nullable Shimmer mShimmer;
 
-  public ShimmerDrawable() {
+  public ColorfulShimmerDrawable(@ColorInt int color) {
+    super(color);
     mShimmerPaint.setAntiAlias(true);
   }
 
@@ -88,6 +90,7 @@ public final class ShimmerDrawable extends Drawable {
 
   @Override
   public void draw(@NonNull Canvas canvas) {
+    super.draw(canvas);
     if (mShimmer == null || mShimmerPaint.getShader() == null) {
       return;
     }
