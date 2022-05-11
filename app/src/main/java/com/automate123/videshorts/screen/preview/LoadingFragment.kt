@@ -31,7 +31,9 @@ class LoadingFragment : Fragment() {
                 .drop(1)
                 .collect {
                     binding.pbWait.isVisible = false
-                    if (it == null) {
+                    if (it != null) {
+                        binding.tvWait.text = "Обработка прошла успешно"
+                    } else {
                         binding.tvWait.text = "Ошибка при обработке"
                     }
                 }

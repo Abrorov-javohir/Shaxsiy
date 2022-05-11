@@ -106,13 +106,15 @@ class ControlsFragment : Fragment() {
         val dirname = viewModel.controller.dirname
         val position = viewModel.controller.position
         binding.ivThumb.isEnabled = position > 0
-        binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4")) {
-            if (position > 0) {
+        if (position > 0) {
+            binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4")) {
                 placeholder(ShimmerColorDrawable(Color.WHITE).apply {
                     setShimmer(Shimmer.ColorHighlightBuilder().build())
                 })
+                error(null)
             }
-            error(null)
+        } else {
+            binding.ivThumb.setImageDrawable(null)
         }
     }
 
