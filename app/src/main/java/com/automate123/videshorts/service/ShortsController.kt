@@ -23,7 +23,7 @@ class ShortsController @Inject constructor(
     private val _isRecording = MutableStateFlow(false)
     val isRecording = _isRecording.asStateFlow()
 
-    private var inputFile: File? = null
+    private var file: File? = null
         set(value) {
             field = value
             _recordFile.tryEmit(value)
@@ -52,46 +52,51 @@ class ShortsController @Inject constructor(
         if (!isCameraBound) {
             return
         }
-        if (!_isRecording.value) {
-            if (inputFile != null) {
-                return
-            }
-            startRecord()
-        } else {
+        if (_isRecording.value) {
             stopRecord()
+        } else {
+            startRecord()
         }
     }
 
     private fun startRecord() {
+        if (file != null) {
+            return
+        }
         recordJob?.cancel()
         position++
         if (position == 1) {
             startTime = currentTimeInSeconds()
         }
-        inputFile = File(rootDir, "$dirname/$position.mp4")
+        file = File(rootDir, "$dirname/$position.mp4")
     }
 
-    private fun stopRecord() {
-        recordJob?.cancel()
-    }
-
-    fun cancelRecord() {
+    fun stopRecord() {
         if (!isCameraBound) {
             return
         }
-        val hasStarted = inputFile != null
+        recordJob?.cancel()
+    }
+
+    fun cancelRecord(): Boolean {
+        if (!isCameraBound) {
+            return false
+        }
+        val hasStarted = file != null
         recordJob?.cancel()
         if (!hasStarted) {
             position--
         }
+        return true
     }
 
-    fun clearRecords() {
+    fun clearRecords(): Boolean {
         if (!isCameraBound) {
-            return
+            return false
         }
         recordJob?.cancel()
         position = 0
+        return true
     }
 
     fun onRecordEvent(event: VideoRecordEvent) {
@@ -106,7 +111,7 @@ class ShortsController @Inject constructor(
                     }
                 }
                 recordJob?.invokeOnCompletion {
-                    inputFile = null
+                    file = null
                 }
             }
             is VideoRecordEvent.Finalize -> {

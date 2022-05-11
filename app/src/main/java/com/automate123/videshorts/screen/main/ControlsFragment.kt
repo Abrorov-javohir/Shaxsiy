@@ -53,6 +53,7 @@ class ControlsFragment : Fragment() {
         binding.rvThumbs.adapter = adapter
         binding.ivThumb.setOnClickListener {
             val context = requireContext()
+            viewModel.controller.stopRecord()
             context.startActivity<PreviewActivity>(
                 KEY_DIRNAME to viewModel.controller.dirname,
                 KEY_POSITION to viewModel.controller.position
@@ -74,10 +75,10 @@ class ControlsFragment : Fragment() {
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.isRecording.collect { isRecording ->
-                if (!isRecording) {
-                    updateAllInactive()
-                } else {
+                if (isRecording) {
                     updateFab(true)
+                } else {
+                    updateAllInactive()
                 }
             }
         }
