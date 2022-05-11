@@ -18,7 +18,6 @@ import com.automate123.videshorts.R
 import com.automate123.videshorts.databinding.FragmentControlsBinding
 import com.automate123.videshorts.screen.preview.PreviewActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.jetbrains.anko.startActivity
 import java.io.File
@@ -63,29 +62,32 @@ class ControlsFragment : Fragment() {
             viewModel.controller.toggleRecord()
         }
         binding.ivRetry.setOnClickListener {
-            viewModel.controller.cancelRecord()
+            if (viewModel.controller.cancelRecord()) {
+                updateAllInactive()
+            }
         }
         binding.ivRetry.setOnLongClickListener {
-            viewModel.controller.clearRecords()
+            if (viewModel.controller.clearRecords()) {
+                updateAllInactive()
+            }
             true
         }
-        updateFab(false)
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.controller.isRecording
-                .drop(1)
-                .collect { isRecording ->
-                    if (!isRecording) {
-                        updateAdapter()
-                        updateThumb()
-                        updateFab(false)
-                    } else {
-                        updateFab(true)
-                    }
-                    updateAdapter()
-                    updateThumb()
-                    binding.ivRetry.isEnabled = position > 0
+            viewModel.controller.isRecording.collect { isRecording ->
+                if (!isRecording) {
+                    updateAllInactive()
+                } else {
+                    updateFab(true)
                 }
+            }
         }
+    }
+
+    private fun updateAllInactive() {
+        updateAdapter()
+        updateThumb()
+        updateFab(false)
+        updateRetry()
     }
 
     @SuppressLint("NotifyDataSetChanged")
