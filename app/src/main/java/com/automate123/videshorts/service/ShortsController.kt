@@ -92,10 +92,10 @@ class ShortsController @Inject constructor(
         }
         if (_isRecording.value) {
             clearRecord()
-            recordJob = null
         } else {
             position = max(0, position - 1)
         }
+        recordJob = null
     }
 
     private fun clearRecord() {
