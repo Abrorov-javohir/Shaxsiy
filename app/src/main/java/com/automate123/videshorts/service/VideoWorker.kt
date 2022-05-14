@@ -81,7 +81,7 @@ class VideoWorker @AssistedInject constructor(
                             -y -f concat -safe 0 -i ${listFile.qPath} -c copy ${outputFile.qPath}
                         """.trim()))
                         if (!ReturnCode.isSuccess(sessions.last().returnCode)) {
-                            throw Throwable(sessions.last().failStackTrace)
+                            throw RuntimeException(sessions.last().failStackTrace)
                         }
                     } finally {
                         listFile.delete()

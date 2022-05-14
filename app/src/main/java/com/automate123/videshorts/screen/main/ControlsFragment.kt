@@ -58,53 +58,40 @@ class ControlsFragment : Fragment() {
             viewModel.controller.stopRecord()
             context.startActivity<PreviewActivity>(
                 KEY_DIRNAME to viewModel.controller.dirname,
-                KEY_POSITION to viewModel.controller.position
+                KEY_POSITION to viewModel.controller.recordPosition.value
             )
         }
         binding.fab.setOnClickListener {
             viewModel.controller.toggleRecord()
         }
         binding.ivRetry.setOnClickListener {
-            if (viewModel.controller.cancelRecord()) {
-                updateAllInactive()
-            }
-        }
-        binding.ivRetry.setOnLongClickListener {
-            if (viewModel.controller.clearRecords()) {
-                updateAllInactive()
-            }
-            true
+            viewModel.controller.cancelRecord()
         }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.controller.isRecording.collect { isRecording ->
-                if (isRecording) {
-                    updateFab(true)
-                } else {
-                    updateAllInactive()
-                }
+                updateFab(isRecording)
+            }
+        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.controller.recordPosition.collect { position ->
+                updateAdapter(position)
+                updateThumb(position)
+                updateRetry(position)
             }
         }
     }
 
-    private fun updateAllInactive() {
-        updateAdapter()
-        updateThumb()
-        updateFab(false)
-        updateRetry()
-    }
-
     @SuppressLint("NotifyDataSetChanged")
-    private fun updateAdapter() {
+    private fun updateAdapter(position: Int) {
         adapter.apply {
             mDirname = viewModel.controller.dirname
-            mPosition = viewModel.controller.position
+            mPosition = position
             notifyDataSetChanged()
         }
     }
 
-    private fun updateThumb() {
+    private fun updateThumb(position: Int) {
         val dirname = viewModel.controller.dirname
-        val position = viewModel.controller.position
         binding.ivThumb.isEnabled = position > 0
         if (position > 0) {
             binding.ivThumb.load(File(rootDir, "$dirname/$position.mp4")) {
@@ -118,16 +105,15 @@ class ControlsFragment : Fragment() {
         }
     }
 
-    private fun updateFab(isActive: Boolean) {
+    private fun updateFab(isRecording: Boolean) {
         binding.fab.apply {
-            backgroundTintList = ColorStateList.valueOf(if (isActive) accentColor else Color.WHITE)
-            imageTintList = ColorStateList.valueOf(if (isActive) Color.WHITE else accentColor)
-            setImageResource(if (isActive) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_circle_24)
+            backgroundTintList = ColorStateList.valueOf(if (isRecording) accentColor else Color.WHITE)
+            imageTintList = ColorStateList.valueOf(if (isRecording) Color.WHITE else accentColor)
+            setImageResource(if (isRecording) R.drawable.ic_baseline_stop_24 else R.drawable.ic_baseline_circle_24)
         }
     }
 
-    private fun updateRetry() {
-        val position = viewModel.controller.position
+    private fun updateRetry(position: Int) {
         binding.ivRetry.isEnabled = position > 0
     }
 }

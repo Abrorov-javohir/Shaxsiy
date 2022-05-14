@@ -8,4 +8,9 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     val controller: ShortsController
-) : ViewModel()
+) : ViewModel() {
+
+    override fun onCleared() {
+        controller.clear()
+    }
+}
