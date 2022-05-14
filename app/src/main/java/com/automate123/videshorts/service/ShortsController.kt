@@ -58,8 +58,6 @@ class ShortsController @Inject constructor(
     val dirname: String
         get() = startTime.toString()
 
-    private var isCancelled = false
-
     fun toggleRecord() {
         if (!isCameraBound) {
             return
@@ -72,14 +70,12 @@ class ShortsController @Inject constructor(
     }
 
     private fun startRecord() {
-        clearRecord()
         _isRecording.value = true
-        isCancelled = false
         if (position == 0) {
             startTime = currentTimeInSeconds()
             CleanWorker.launch(context, dirname)
         }
-        file = File(rootDir, "$dirname/$position.mp4")
+        file = File(rootDir, "$dirname/${position + 1}.mp4")
     }
 
     fun stopRecord() {
@@ -93,11 +89,20 @@ class ShortsController @Inject constructor(
         if (!isCameraBound) {
             return
         }
-        isCancelled = true
         if (_isRecording.value) {
             clearRecord()
         } else {
             position--
+        }
+    }
+
+    private fun clearRecord() {
+        file = null
+        if (recordJob != null) {
+            recordJob?.cancel()
+            recordJob = null
+        } else {
+            _isRecording.value = false
         }
     }
 
@@ -112,18 +117,17 @@ class ShortsController @Inject constructor(
                     }
                 }
                 recordJob?.invokeOnCompletion {
-                    clearRecord()
+                    file = null
                 }
             }
             is VideoRecordEvent.Finalize -> {
-                clearRecord()
                 val options = event.outputOptions as FileOutputOptions
                 when (event.error) {
                     ERROR_UNKNOWN, ERROR_ENCODING_FAILED, ERROR_RECORDER_ERROR, ERROR_NO_VALID_DATA -> {
                         // invalid file
                     }
                     else -> {
-                        if (!isCancelled) {
+                        if (recordJob != null) {
                             if (options.file.exists()) {
                                 position++
                             }
@@ -133,16 +137,6 @@ class ShortsController @Inject constructor(
                 _isRecording.value = false
             }
             else -> {}
-        }
-    }
-
-    private fun clearRecord() {
-        file = null
-        if (recordJob != null) {
-            recordJob?.cancel()
-            recordJob = null
-        } else {
-            _isRecording.value = false
         }
     }
 
