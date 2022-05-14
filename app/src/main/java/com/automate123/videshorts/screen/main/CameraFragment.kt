@@ -118,7 +118,7 @@ class CameraFragment : Fragment() {
     }
 
     override fun onStop() {
-        stopRecording()
+        viewModel.controller.stopRecord()
         super.onStop()
     }
 
