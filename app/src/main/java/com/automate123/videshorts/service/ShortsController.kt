@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
+import kotlin.math.max
 
 @ViewModelScoped
 class ShortsController @Inject constructor(
@@ -92,7 +93,7 @@ class ShortsController @Inject constructor(
         if (_isRecording.value) {
             clearRecord()
         } else {
-            position--
+            position = max(0, position - 1)
         }
     }
 
@@ -100,7 +101,6 @@ class ShortsController @Inject constructor(
         file = null
         if (recordJob != null) {
             recordJob?.cancel()
-            recordJob = null
         } else {
             _isRecording.value = false
         }
@@ -127,7 +127,7 @@ class ShortsController @Inject constructor(
                         // invalid file
                     }
                     else -> {
-                        if (recordJob != null) {
+                        if (recordJob?.isCancelled == false) {
                             if (options.file.exists()) {
                                 position++
                             }
