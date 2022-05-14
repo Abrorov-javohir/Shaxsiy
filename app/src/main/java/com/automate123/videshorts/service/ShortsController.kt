@@ -92,6 +92,7 @@ class ShortsController @Inject constructor(
         }
         if (_isRecording.value) {
             clearRecord()
+            recordJob = null
         } else {
             position = max(0, position - 1)
         }
@@ -127,7 +128,7 @@ class ShortsController @Inject constructor(
                         // invalid file
                     }
                     else -> {
-                        if (recordJob?.isCancelled == false) {
+                        if (recordJob != null) {
                             if (options.file.exists()) {
                                 position++
                             }
