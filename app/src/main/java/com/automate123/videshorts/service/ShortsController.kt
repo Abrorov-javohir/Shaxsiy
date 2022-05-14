@@ -1,8 +1,12 @@
 package com.automate123.videshorts.service
 
+import android.content.Context
+import androidx.camera.video.FileOutputOptions
 import androidx.camera.video.VideoRecordEvent
+import androidx.camera.video.VideoRecordEvent.Finalize.*
 import com.automate123.videshorts.data.Preferences
 import com.automate123.videshorts.extension.currentTimeInSeconds
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
@@ -16,9 +20,13 @@ import javax.inject.Inject
 
 @ViewModelScoped
 class ShortsController @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val preferences: Preferences,
     private val rootDir: File
 ) : CoroutineScope {
+
+    @Volatile
+    var isCameraBound = false
 
     private val _isRecording = MutableStateFlow(false)
     val isRecording = _isRecording.asStateFlow()
@@ -31,18 +39,20 @@ class ShortsController @Inject constructor(
     private val _recordFile = MutableSharedFlow<File?>(0, 1, DROP_OLDEST)
     val recordFile = _recordFile.asSharedFlow()
 
+    private var position = 0
+        set(value) {
+            field = value
+            _recordPosition.value = value
+        }
+    private val _recordPosition = MutableStateFlow(position)
+    val recordPosition = _recordPosition.asStateFlow()
+
     private val _countdown = MutableSharedFlow<Int>(0, 1, DROP_OLDEST)
     val countdown = _countdown.asSharedFlow()
 
     private val parentJob = SupervisorJob()
 
     private var recordJob: Job? = null
-
-    @Volatile
-    var isCameraBound = false
-
-    var position = 0
-        private set
 
     private var startTime = 0L
     val dirname: String
@@ -60,13 +70,14 @@ class ShortsController @Inject constructor(
     }
 
     private fun startRecord() {
-        if (file != null) {
+        val isActive = file != null || _isRecording.value
+        if (isActive) {
             return
         }
         clearRecord()
-        position++
-        if (position == 1) {
+        if (position == 0) {
             startTime = currentTimeInSeconds()
+            CleanWorker.launch(context, dirname)
         }
         file = File(rootDir, "$dirname/$position.mp4")
     }
@@ -105,8 +116,19 @@ class ShortsController @Inject constructor(
                 }
             }
             is VideoRecordEvent.Finalize -> {
-                _isRecording.value = false
+                val options = event.outputOptions as FileOutputOptions
+                when (event.error) {
+                    ERROR_UNKNOWN, ERROR_ENCODING_FAILED, ERROR_RECORDER_ERROR, ERROR_NO_VALID_DATA -> {
+                        // invalid file
+                    }
+                    else -> {
+                        if (options.file.exists()) {
+                            position++
+                        }
+                    }
+                }
                 clearRecord()
+                _isRecording.value = false
             }
             else -> {}
         }
@@ -115,6 +137,10 @@ class ShortsController @Inject constructor(
     private fun clearRecord() {
         recordJob?.cancel()
         file = null
+    }
+
+    fun clear() {
+        parentJob.cancel()
     }
 
     override val coroutineContext = Dispatchers.Main + parentJob + CoroutineExceptionHandler { _, e ->
